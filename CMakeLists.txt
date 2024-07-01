@@ -8,19 +8,51 @@ get_filename_component(ProjectName ${CMAKE_SOURCE_DIR} NAME)
 # 替换名称中的空格为下划线
 string(REPLACE " " "_" ProjectName ${ProjectName})
 
-# 打印项目名称用于调试
-#message("Project Name: ${ProjectName}")
-
 # 设置项目名称
 project(${ProjectName} CXX)
 
 set(PROJECT_INCLUDE_DIRS ${CMAKE_SOURCE_DIR}/include)
 set(EXECUTABLE_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/bin)
+set(LIBRARY_OUTPUT_PATH ${PROJECT_SOURCE_DIR}/build/lib)
 
 include_directories(${PROJECT_INCLUDE_DIRS})
 
+# 添加依赖
+find_package(Catch2 REQUIRED)
+find_package(fmt REQUIRED)
+find_package(spdlog REQUIRED)
+
 # 获取所有的源文件
 file(GLOB_RECURSE source_files ${CMAKE_SOURCE_DIR}/src/*.cpp)
+file(GLOB_RECURSE test_files ${CMAKE_SOURCE_DIR}/test/*.cpp)
+
+# 排除main.cpp
+list(FILTER source_files EXCLUDE REGEX "main\\.cpp$")
+
+# 创建动态库
+add_library(${ProjectName}_lib SHARED ${source_files})
+
+# 链接动态库依赖
+
 
 # 创建可执行文件
-add_executable(${ProjectName} ${source_files})
+add_executable(${ProjectName} ${CMAKE_SOURCE_DIR}/src/main.cpp)
+target_link_libraries(${ProjectName} PRIVATE ${ProjectName}_lib)
+target_link_libraries(${ProjectName} PRIVATE fmt::fmt)
+target_link_libraries(${ProjectName} PRIVATE spdlog::spdlog)
+
+# 创建测试可执行文件
+add_executable(${ProjectName}_test ${test_files})
+target_link_libraries(${ProjectName}_test PRIVATE ${ProjectName}_lib)
+target_link_libraries(${ProjectName}_test PRIVATE Catch2::Catch2WithMain)
+target_link_libraries(${ProjectName}_test PRIVATE fmt::fmt)
+target_link_libraries(${ProjectName}_test PRIVATE spdlog::spdlog)
+
+# 设置输出路径
+set_target_properties(${ProjectName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+set_target_properties(${ProjectName}_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
+set_target_properties(${ProjectName}_lib PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+# 包含测试
+include(CTest)
+add_test(NAME ${ProjectName}_test COMMAND ${ProjectName}_test)
