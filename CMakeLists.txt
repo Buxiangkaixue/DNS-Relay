@@ -52,7 +52,3 @@ target_link_libraries(${ProjectName}_test PRIVATE spdlog::spdlog)
 set_target_properties(${ProjectName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 set_target_properties(${ProjectName}_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 set_target_properties(${ProjectName}_lib PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
-
-# 包含测试
-include(CTest)
-add_test(NAME ${ProjectName}_test COMMAND ${ProjectName}_test)
