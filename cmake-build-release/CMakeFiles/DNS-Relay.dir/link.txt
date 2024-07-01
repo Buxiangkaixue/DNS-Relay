@@ -1,1 +1,0 @@
-/usr/bin/g++ -O3 -DNDEBUG "CMakeFiles/DNS-Relay.dir/src/test.cpp.o" -o /home/stellaura/Programs/c++/DNS-Relay/build/bin/DNS-Relay 

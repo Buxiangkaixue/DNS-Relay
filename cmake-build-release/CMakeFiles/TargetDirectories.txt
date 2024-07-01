@@ -1,3 +1,0 @@
-/home/stellaura/Programs/c++/DNS-Relay/cmake-build-release/CMakeFiles/DNS-Relay.dir
-/home/stellaura/Programs/c++/DNS-Relay/cmake-build-release/CMakeFiles/edit_cache.dir
-/home/stellaura/Programs/c++/DNS-Relay/cmake-build-release/CMakeFiles/rebuild_cache.dir
