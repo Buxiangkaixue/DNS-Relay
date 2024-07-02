@@ -1,0 +1,4 @@
+/home/stellaura/Applications/clion-2023.1.5/bin/cmake/linux/x64/bin/cmake -DCMAKE_BUILD_TYPE=RelWithDebInfo -DCMAKE_MAKE_PROGRAM=/home/stellaura/Applications/clion-2023.1.5/bin/ninja/linux/x64/ninja -G Ninja -S /home/stellaura/Programs/c++/DNS-Relay -B /home/stellaura/Programs/c++/DNS-Relay/cmake-build-relwithdebinfo
+-- Configuring done
+-- Generating done
+-- Build files have been written to: /home/stellaura/Programs/c++/DNS-Relay/cmake-build-relwithdebinfo

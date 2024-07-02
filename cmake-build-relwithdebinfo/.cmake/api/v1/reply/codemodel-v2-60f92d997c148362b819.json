@@ -1,0 +1,78 @@
+{
+	"configurations" : 
+	[
+		{
+			"directories" : 
+			[
+				{
+					"build" : ".",
+					"jsonFile" : "directory-.-RelWithDebInfo-f5ebdc15457944623624.json",
+					"minimumCMakeVersion" : 
+					{
+						"string" : "3.25"
+					},
+					"projectIndex" : 0,
+					"source" : ".",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"name" : "RelWithDebInfo",
+			"projects" : 
+			[
+				{
+					"directoryIndexes" : 
+					[
+						0
+					],
+					"name" : "DNS-Relay",
+					"targetIndexes" : 
+					[
+						0,
+						1,
+						2
+					]
+				}
+			],
+			"targets" : 
+			[
+				{
+					"directoryIndex" : 0,
+					"id" : "DNS-Relay::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-DNS-Relay-RelWithDebInfo-8acdafbe204509e9ed81.json",
+					"name" : "DNS-Relay",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "DNS-Relay_lib::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-DNS-Relay_lib-RelWithDebInfo-660a42673fead47829d1.json",
+					"name" : "DNS-Relay_lib",
+					"projectIndex" : 0
+				},
+				{
+					"directoryIndex" : 0,
+					"id" : "DNS-Relay_test::@6890427a1f51a3e7e1df",
+					"jsonFile" : "target-DNS-Relay_test-RelWithDebInfo-c6ef75450ba65bc0c50a.json",
+					"name" : "DNS-Relay_test",
+					"projectIndex" : 0
+				}
+			]
+		}
+	],
+	"kind" : "codemodel",
+	"paths" : 
+	{
+		"build" : "/home/stellaura/Programs/c++/DNS-Relay/cmake-build-relwithdebinfo",
+		"source" : "/home/stellaura/Programs/c++/DNS-Relay"
+	},
+	"version" : 
+	{
+		"major" : 2,
+		"minor" : 4
+	}
+}

@@ -33,7 +33,8 @@ list(FILTER source_files EXCLUDE REGEX "main\\.cpp$")
 add_library(${ProjectName}_lib SHARED ${source_files})
 
 # 链接动态库依赖
-
+target_link_libraries(${ProjectName}_lib PRIVATE fmt::fmt)
+target_link_libraries(${ProjectName}_lib PRIVATE spdlog::spdlog)
 
 # 创建可执行文件
 add_executable(${ProjectName} ${CMAKE_SOURCE_DIR}/src/main.cpp)
