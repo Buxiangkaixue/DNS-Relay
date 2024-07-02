@@ -39,15 +39,15 @@ target_link_libraries(${ProjectName}_lib PRIVATE spdlog::spdlog)
 # 创建可执行文件
 add_executable(${ProjectName} ${CMAKE_SOURCE_DIR}/src/main.cpp
         src/DNSRecordManager.cpp
-        src/DNSRecordManager.h
+        include/DNSRecordManager.h
         src/UpStreamDNS.cpp
-        src/UpStreamDNS.h
+        include/UpStreamDNS.h
         src/Config.cpp
-        src/Config.h
+        include/Config.h
         src/NetworkService.cpp
-        src/NetworkService.h
+        include/NetworkService.h
         src/DNSResolver.cpp
-        src/DNSResolver.h)
+        include/DNSResolver.h)
 target_link_libraries(${ProjectName} PRIVATE ${ProjectName}_lib)
 target_link_libraries(${ProjectName} PRIVATE fmt::fmt)
 target_link_libraries(${ProjectName} PRIVATE spdlog::spdlog)

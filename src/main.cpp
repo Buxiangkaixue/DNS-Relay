@@ -1,9 +1,7 @@
 //
 // Created by Leoevergarden on 2024/7/1.
 //
-#include "DNS_query.h"
-#include "add.h"
-#include "sub.h"
+#include "DNSResolver.h"
 #include "utility.h"
 
 #include <fmt/format.h>
