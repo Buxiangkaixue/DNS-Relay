@@ -5,8 +5,7 @@
 #include <string>
 #include <vector>
 
-void print_dns_query_result(
-    const std::pair<std::vector<std::string>, std::vector<std::string>>& ret_ip) {
+void print_dns_query_result(const std::pair<std::vector<std::string>, std::vector<std::string>>& ret_ip) {
   if (!ret_ip.first.empty()) {
     fmt::print("IPv4: ");
     for (auto ipv4 : ret_ip.first) {
