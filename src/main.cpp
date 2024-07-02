@@ -10,6 +10,7 @@
 #include <iostream>
 
 int main() {
+  fmt::print("baidu.com\n");
   auto ret_ip = resolve_hostname("baidu.com");
   print_dns_query_result(ret_ip);
 }
