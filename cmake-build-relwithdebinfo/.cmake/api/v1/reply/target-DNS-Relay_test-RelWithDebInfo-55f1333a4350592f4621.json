@@ -2,7 +2,7 @@
 	"artifacts" : 
 	[
 		{
-			"path" : "/home/stellaura/Programs/c++/DNS-Relay/build/bin/DNS-Relay"
+			"path" : "/home/stellaura/Programs/c++/DNS-Relay/build/bin/DNS-Relay_test"
 		}
 	],
 	"backtrace" : 1,
@@ -12,11 +12,16 @@
 		[
 			"add_executable",
 			"target_link_libraries",
+			"set_target_properties",
+			"include",
+			"find_package",
 			"include_directories"
 		],
 		"files" : 
 		[
-			"CMakeLists.txt"
+			"CMakeLists.txt",
+			"/usr/local/lib/cmake/Catch2/Catch2Targets.cmake",
+			"/usr/local/lib/cmake/Catch2/Catch2Config.cmake"
 		],
 		"nodes" : 
 		[
@@ -26,29 +31,61 @@
 			{
 				"command" : 0,
 				"file" : 0,
-				"line" : 39,
+				"line" : 56,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 40,
+				"line" : 57,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 41,
+				"line" : 58,
 				"parent" : 0
 			},
 			{
 				"command" : 1,
 				"file" : 0,
-				"line" : 42,
+				"line" : 59,
 				"parent" : 0
+			},
+			{
+				"command" : 1,
+				"file" : 0,
+				"line" : 60,
+				"parent" : 0
+			},
+			{
+				"command" : 4,
+				"file" : 0,
+				"line" : 21,
+				"parent" : 0
+			},
+			{
+				"file" : 2,
+				"parent" : 6
+			},
+			{
+				"command" : 3,
+				"file" : 2,
+				"line" : 33,
+				"parent" : 7
+			},
+			{
+				"file" : 1,
+				"parent" : 8
 			},
 			{
 				"command" : 2,
+				"file" : 1,
+				"line" : 69,
+				"parent" : 9
+			},
+			{
+				"command" : 5,
 				"file" : 0,
 				"line" : 18,
 				"parent" : 0
@@ -70,14 +107,14 @@
 			"defines" : 
 			[
 				{
-					"backtrace" : 4,
+					"backtrace" : 5,
 					"define" : "SPDLOG_COMPILED_LIB"
 				}
 			],
 			"includes" : 
 			[
 				{
-					"backtrace" : 5,
+					"backtrace" : 11,
 					"path" : "/home/stellaura/Programs/c++/DNS-Relay/include"
 				}
 			],
@@ -86,7 +123,27 @@
 			{
 				"backtraces" : 
 				[
-					3
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					3,
+					4
 				],
 				"standard" : "20"
 			},
@@ -103,7 +160,7 @@
 			"id" : "DNS-Relay_lib::@6890427a1f51a3e7e1df"
 		}
 	],
-	"id" : "DNS-Relay::@6890427a1f51a3e7e1df",
+	"id" : "DNS-Relay_test::@6890427a1f51a3e7e1df",
 	"link" : 
 	{
 		"commandFragments" : 
@@ -127,19 +184,29 @@
 			},
 			{
 				"backtrace" : 3,
-				"fragment" : "/usr/local/lib/libfmt.a",
+				"fragment" : "/usr/local/lib/libCatch2Main.a",
 				"role" : "libraries"
 			},
 			{
 				"backtrace" : 4,
+				"fragment" : "/usr/local/lib/libfmt.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 5,
 				"fragment" : "/usr/local/lib/libspdlog.a",
+				"role" : "libraries"
+			},
+			{
+				"backtrace" : 10,
+				"fragment" : "/usr/local/lib/libCatch2.a",
 				"role" : "libraries"
 			}
 		],
 		"language" : "CXX"
 	},
-	"name" : "DNS-Relay",
-	"nameOnDisk" : "DNS-Relay",
+	"name" : "DNS-Relay_test",
+	"nameOnDisk" : "DNS-Relay_test",
 	"paths" : 
 	{
 		"build" : ".",
@@ -160,7 +227,7 @@
 		{
 			"backtrace" : 1,
 			"compileGroupIndex" : 0,
-			"path" : "src/main.cpp",
+			"path" : "test/test.cpp",
 			"sourceGroupIndex" : 0
 		}
 	],
