@@ -50,20 +50,3 @@ resolve_hostname(const std::string &hostname) {
 
   return {ipv4_addresses, ipv6_addresses};
 }
-
-int main() {
-  std::string hostname = "www.example.com";
-  auto result = resolve_hostname(hostname);
-
-  std::cout << "IPv4 addresses for " << hostname << ":\n";
-  for (const auto &ip : result.first) {
-    std::cout << "  " << ip << std::endl;
-  }
-
-  std::cout << "IPv6 addresses for " << hostname << ":\n";
-  for (const auto &ip : result.second) {
-    std::cout << "  " << ip << std::endl;
-  }
-
-  return 0;
-}
