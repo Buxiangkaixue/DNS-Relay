@@ -49,7 +49,7 @@ add_executable(${ProjectName} ${CMAKE_SOURCE_DIR}/src/main.cpp
         src/DNSCache.cpp
         include/DNSCache.h
         src/DNSDatabase.cpp
-        include/DNSDatabase.h)
+        include/DNSDatabase.h src/DNS_utils.cpp include/DNS_utils.h)
 target_link_libraries(${ProjectName} PRIVATE ${ProjectName}_lib)
 target_link_libraries(${ProjectName} PRIVATE fmt::fmt)
 target_link_libraries(${ProjectName} PRIVATE spdlog::spdlog)
