@@ -52,27 +52,39 @@ std::string extract_domain_name(const char *buffer, ssize_t len) {
 
   return domain_name;
 }
-
 std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len, const IP_Result &ip_result) {
   std::vector<uint8_t> response(query, query + query_len); // Start with the original query
   response[2] = 0x81; // Set the response flags
   response[3] = 0x80; // Set the response flags
 
+  uint16_t qtype = (query[query_len - 4] << 8) | query[query_len - 3];
+
+  std::vector<std::string> ips;
+  if (qtype == 1) { // A record
+    ips = ip_result.ipv4;
+  } else if (qtype == 28) { // AAAA record
+    ips = ip_result.ipv6;
+  }
+
   // Calculate the number of answers
-  uint16_t answer_count = ip_result.ipv4.size() + ip_result.ipv6.size();
+  uint16_t answer_count = ips.size();
   response[6] = (answer_count >> 8) & 0xFF;
   response[7] = answer_count & 0xFF;
 
   // Move the response pointer to the end of the query section
   size_t pos = query_len;
 
-  // Add the IPv4 answers
-  for (const auto &ip : ip_result.ipv4) {
+  for (const auto &ip : ips) {
     response.push_back(0xc0); // Name: pointer to offset 12 (start of the query)
     response.push_back(0x0c);
 
-    response.push_back(0x00); // Type: A (IPv4 address)
-    response.push_back(0x01);
+    if (qtype == 1) { // A record
+      response.push_back(0x00); // Type: A
+      response.push_back(0x01);
+    } else if (qtype == 28) { // AAAA record
+      response.push_back(0x00); // Type: AAAA
+      response.push_back(0x1c);
+    }
 
     response.push_back(0x00); // Class: IN
     response.push_back(0x01);
@@ -82,38 +94,21 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len, co
     response.push_back(0x00);
     response.push_back(0x3c); // TTL: 60 seconds
 
-    response.push_back(0x00); // Data length: 4 bytes for an IPv4 address
-    response.push_back(0x04);
+    if (qtype == 1) { // A record
+      response.push_back(0x00); // Data length: 4 bytes for an IPv4 address
+      response.push_back(0x04);
 
-    // Convert the IP address to binary form and append to the response
-    in_addr addr;
-    inet_pton(AF_INET, ip.c_str(), &addr);
-    response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 4);
-  }
+      in_addr addr;
+      inet_pton(AF_INET, ip.c_str(), &addr);
+      response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 4);
+    } else if (qtype == 28) { // AAAA record
+      response.push_back(0x00); // Data length: 16 bytes for an IPv6 address
+      response.push_back(0x10);
 
-  // Add the IPv6 answers
-  for (const auto &ip : ip_result.ipv6) {
-    response.push_back(0xc0); // Name: pointer to offset 12 (start of the query)
-    response.push_back(0x0c);
-
-    response.push_back(0x00); // Type: AAAA (IPv6 address)
-    response.push_back(0x1c);
-
-    response.push_back(0x00); // Class: IN
-    response.push_back(0x01);
-
-    response.push_back(0x00); // TTL: 0 (short TTL for simplicity)
-    response.push_back(0x00);
-    response.push_back(0x00);
-    response.push_back(0x3c); // TTL: 60 seconds
-
-    response.push_back(0x00); // Data length: 16 bytes for an IPv6 address
-    response.push_back(0x10);
-
-    // Convert the IP address to binary form and append to the response
-    in6_addr addr;
-    inet_pton(AF_INET6, ip.c_str(), &addr);
-    response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 16);
+      in6_addr addr;
+      inet_pton(AF_INET6, ip.c_str(), &addr);
+      response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 16);
+    }
   }
 
   return response;
