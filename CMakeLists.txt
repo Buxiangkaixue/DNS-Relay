@@ -38,8 +38,6 @@ target_link_libraries(${ProjectName}_lib PRIVATE spdlog::spdlog)
 
 # 创建可执行文件
 add_executable(${ProjectName} ${CMAKE_SOURCE_DIR}/src/main.cpp
-        src/HashTable.cpp
-        src/HashTable.h
         src/DNSRecordManager.cpp
         src/DNSRecordManager.h
         src/UpStreamDNS.cpp
