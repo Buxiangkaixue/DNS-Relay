@@ -6,14 +6,6 @@
 
 #define BUFFER_SIZE 512
 
-void print_hex(const char *data, size_t len) {
-    for (size_t i = 0; i < len; ++i) {
-        printf("%02x ", (unsigned char)data[i]);
-        if ((i + 1) % 16 == 0) printf("\n");
-    }
-    printf("\n");
-}
-
 std::vector<std::string> parse_dns_response(const char *buffer, ssize_t len) {
     std::vector<std::string> ip_addresses;
 

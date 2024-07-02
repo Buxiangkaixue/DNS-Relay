@@ -1,6 +1,8 @@
 //
 // Created by stellaura on 02/07/24.
 //
+#include "IP_Result.h"
+
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
@@ -9,8 +11,7 @@
 #include <sys/socket.h>
 #include <vector>
 
-std::pair<std::vector<std::string>, std::vector<std::string>>
-resolve_hostname(const std::string &hostname) {
+IP_Result dns_resolve_hostname(const std::string &hostname) {
   addrinfo hints; // 查询的配置文件 指定了查询的方式
   addrinfo *res;  // 查询的结果的返回位置 是一个链表
 

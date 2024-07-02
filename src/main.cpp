@@ -1,69 +1,87 @@
-#include <iostream>
-#include <unistd.h>
-#include <arpa/inet.h>
-#include <cstring>
-#include <vector>
-#include "DNS_utils.h"
+#include "DNSQuery.h"
+#include "FileDatabase.h"
+#include "LRUCache.h"
+#include "utility.h"
+
 #include <fmt/format.h>
 #include <spdlog/spdlog.h>
 
-#define PORT 53
-#define BUFFER_SIZE 512
+#include <arpa/inet.h>
+#include <cstring>
+#include <iostream>
+#include <unistd.h>
+#include <vector>
 
-int main(int argc, char *argv[]) {
-    if (argc != 2) {
-        std::cerr << "Usage: " << argv[0] << " <hostname>" << std::endl;
-        return 1;
-    }
+constexpr int PORT = 53;
+constexpr int BUFFER_SIZE = 512;
 
-    std::string hostname = argv[1];
-    fmt::print("Querying DNS for: {}\n", hostname);
+int main() {
+  //============================================
+  // 初始化 socket 监听UDP端口
+  int sockfd;
+  struct sockaddr_in server_addr, client_addr;
+  char buffer[BUFFER_SIZE];
+  socklen_t addr_len = sizeof(client_addr);
 
-    int sockfd;
-    struct sockaddr_in server_addr;
-    char buffer[BUFFER_SIZE];
-    size_t query_size;
+  // 创建 UDP socket
+  if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
+    perror("Socket creation failed");
+    exit(EXIT_FAILURE);
+  }
 
-    // Create UDP socket
-    if ((sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
-        perror("Socket creation failed");
-        return 1;
-    }
+  // 设置服务器地址
+  memset(&server_addr, 0, sizeof(server_addr));
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+  server_addr.sin_port = htons(PORT);
 
-    // Setup server address
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(PORT);
-    server_addr.sin_addr.s_addr = inet_addr("8.8.8.8"); // Using Google DNS server
+  // 绑定 socket 到地址和端口
+  if (bind(sockfd, (const struct sockaddr *)&server_addr, sizeof(server_addr)) <
+      0) {
+    perror("Bind failed");
+    close(sockfd);
+    exit(EXIT_FAILURE);
+  }
 
-    // Construct DNS query
-    construct_dns_query(hostname, buffer, query_size);
+  std::cout << "Listening on 127.0.0.1:" << PORT << " for DNS queries..."
+            << std::endl;
 
-    // Send DNS query
-    if (sendto(sockfd, buffer, query_size, 0, (const struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
-        perror("Send failed");
-        close(sockfd);
-        return 1;
-    }
-
-    // Receive DNS response
-    socklen_t addr_len = sizeof(server_addr);
-    ssize_t n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0, (struct sockaddr *)&server_addr, &addr_len);
+  // ================================
+  // 初始化程序查询
+  const std::string file_path =
+      "/home/stellaura/Programs/c++/DNS-Relay/data/dnsrelay.txt";
+  LRUCache<std::string, IP_Result> cache(3);
+  FileDatabase file_database(file_path);
+  DNSQuery dns_query(cache, file_database);
+  std::optional<IP_Result> ip_result;
+  while (true) {
+    // 接收 DNS 查询
+    ssize_t n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
+                         (struct sockaddr *)&client_addr, &addr_len);
     if (n < 0) {
-        perror("Receive failed");
-        close(sockfd);
-        return 1;
+      perror("Receive failed");
+      continue;
     }
 
-    std::cout << "Received DNS response:" << std::endl;
+    std::cout << "Received DNS query:" << std::endl;
     print_hex(buffer, n);
 
-    std::vector<std::string> ip_addresses = parse_dns_response(buffer, n);
-    std::cout << "IP Addresses:" << std::endl;
-    for (const auto &ip : ip_addresses) {
-        std::cout << ip << std::endl;
+    auto domain_name = extract_domain_name(buffer, n);
+    fmt::print("domain name: {}\n", domain_name);
+
+    ip_result = dns_query.dns_query(domain_name);
+    print_dns_query_result(*ip_result);
+
+    if (ip_result) {
+      // 构建 DNS 响应包
+      std::vector<uint8_t> response = build_dns_response(buffer, n, *ip_result);
+
+      // 发送 DNS 响应包
+      sendto(sockfd, response.data(), response.size(), 0, (struct sockaddr *)&client_addr, addr_len);
     }
 
-    close(sockfd);
-    return 0;
+  }
+
+  close(sockfd);
+  return 0;
 }
