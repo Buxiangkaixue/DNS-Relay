@@ -30,9 +30,11 @@ FileDatabase::FileDatabase(const std::string &filename) {
 }
 
 std::optional<IP_Result> FileDatabase::get(const std::string &domain) const {
-  auto it = database.find(domain);
-  if (it != database.end()) {
-    return it->second;
-  }
-  return std::nullopt;
+    std::lock_guard<std::mutex> lock(mtx); // 使用互斥锁保护数据库访问
+    auto it = database.find(domain);
+    if (it != database.end()) {
+        return it->second;
+    }
+    return std::nullopt;
 }
+
