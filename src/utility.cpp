@@ -66,6 +66,12 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len, co
     ips = ip_result.ipv6;
   }
 
+    // Check for special IP address "0.0.0.0" and adjust the RCODE if found
+    bool hasSpecialIP = std::find(ips.begin(), ips.end(), "0.0.0.0") != ips.end();
+    if (hasSpecialIP) {
+        response[3] = 0x83; // Set RCODE to 3 (NXDOMAIN)
+    }
+
   // Calculate the number of answers
   uint16_t answer_count = ips.size();
   response[6] = (answer_count >> 8) & 0xFF;
