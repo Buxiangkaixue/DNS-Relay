@@ -34,9 +34,9 @@ void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
   spdlog::info("query type: {}", qtype);
 
   auto ip_result = dns_query.dns_query(domain_name);
-  print_dns_query_result(*ip_result);
 
   if (ip_result) {
+    print_dns_query_result(*ip_result);
     // 构建 DNS 响应包
     std::vector<uint8_t> response = build_dns_response(
         (const char *)request.data(), request.size(), *ip_result);

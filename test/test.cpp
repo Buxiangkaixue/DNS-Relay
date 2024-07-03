@@ -62,3 +62,5 @@ TEST_CASE("test dns query") {
     print_dns_query_result(*ret);
   }
 }
+
+TEST_CASE("test IP_Result format") { fmt::print("{}", IP_Result()); }
