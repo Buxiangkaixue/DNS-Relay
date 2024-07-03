@@ -1,6 +1,3 @@
-//
-// Created by Leoevergarden on 2024/7/1.
-//
 #include "DNSQuery.h"
 #include "FileDatabase.h"
 #include "LRU_Cache.h"
