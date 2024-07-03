@@ -1,8 +1,3 @@
-//    cacheMap_[key] = cacheItemsList_.begin();
-
-// Created by stellaura on 02/07/24.
-//
-
 #ifndef DNS_RELAY_LRU_CACHE_H
 #define DNS_RELAY_LRU_CACHE_H
 
@@ -19,11 +14,13 @@ private:
   std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator>
       cacheMap_;
   size_t capacity_;
+  mutable std::shared_mutex mutex_; // 保护数据结构的共享互斥锁
 
 public:
   LRU_Cache(size_t capacity) : capacity_(capacity) {}
 
   Value get(const Key &key) {
+    std::unique_lock lock(mutex_);
     auto it = cacheMap_.find(key);
     if (it == cacheMap_.end()) {
       throw std::runtime_error("Key not found");
@@ -34,6 +31,7 @@ public:
   }
 
   void put(const Key &key, const Value &value) {
+    std::unique_lock lock(mutex_);
     auto it = cacheMap_.find(key);
     if (it != cacheMap_.end()) {
       cacheItemsList_.splice(cacheItemsList_.begin(), cacheItemsList_,
@@ -53,17 +51,32 @@ public:
     cacheMap_[key] = cacheItemsList_.begin();
   }
 
-  size_t size() const { return cacheItemsList_.size(); }
+  size_t size() const {
+    std::shared_lock lock(mutex_);
+    return cacheItemsList_.size();
+  }
 
   bool contains(const Key &key) const {
+    std::shared_lock lock(mutex_);
     return cacheMap_.find(key) != cacheMap_.end();
   }
 
   void remove(const Key &key) {
+    std::unique_lock lock(mutex_);
     auto it = cacheMap_.find(key);
     if (it != cacheMap_.end()) {
       cacheItemsList_.erase(it->second);
       cacheMap_.erase(it);
+    }
+  }
+
+  // 避免重复上锁 不能调用 remove 函数
+  void remove_oldest() {
+    std::unique_lock lock(mutex_);
+    if (!cacheItemsList_.empty()) {
+      auto oldest = cacheItemsList_.back();
+      cacheItemsList_.pop_back();
+      cacheMap_.erase(oldest.first);
     }
   }
 };
