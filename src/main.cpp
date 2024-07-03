@@ -8,6 +8,7 @@
 #include <cstring>
 #include <fmt/format.h>
 #include <iostream>
+#include <map>
 #include <spdlog/spdlog.h>
 #include <thread>
 #include <unistd.h>
@@ -15,30 +16,57 @@
 
 constexpr int PORT = 53;
 
+// 映射日志等级字符串到spdlog的等级
+std::map<std::string, spdlog::level::level_enum> log_level_map = {
+    {"trace", spdlog::level::trace}, {"debug", spdlog::level::debug},
+    {"info", spdlog::level::info},   {"warn", spdlog::level::warn},
+    {"error", spdlog::level::err},   {"critical", spdlog::level::critical},
+    {"off", spdlog::level::off}};
+
+void show_usage(const std::string &prog_name) {
+  std::cerr << "Usage: " << prog_name << " [-l log_level] [-h]" << std::endl;
+  std::cerr << "  -l log_level   Set log level (trace, debug, info, warn, "
+               "error, critical, off)"
+            << std::endl;
+  std::cerr << "  -h             Show this help message" << std::endl;
+}
+
 int main(int argc, char *argv[]) {
-  int udp_sockfd;
-  struct sockaddr_in server_addr;
+  // ==========================
+  // log level setting
+  int opt;
+  std::string log_level = "info"; // 默认日志等级为info
 
   // 解析命令行参数
-  int debug_level = 0;
-  int opt;
-  while ((opt = getopt(argc, argv, "d")) != -1) {
-      switch (opt) {
-          case 'd':
-              debug_level++;
-              break;
-          default:
-              std::cerr << "Usage: " << argv[0] << " [-d]" << std::endl;
-              exit(EXIT_FAILURE);
-      }
+  while ((opt = getopt(argc, argv, "l:h")) != -1) {
+    switch (opt) {
+    case 'l':
+      log_level = optarg;
+      break;
+    case 'h':
+      show_usage(argv[0]);
+      return 0;
+    default:
+      show_usage(argv[0]);
+      return 1;
+    }
   }
 
-    // 设置日志级别
-    if (debug_level == 1) {
-        spdlog::set_level(spdlog::level::debug); // 启用基本调试模式
-    } else if (debug_level > 1) {
-        spdlog::set_level(spdlog::level::trace); // 启用详细调试模式
-    }
+  // 设置日志级别
+  auto it = log_level_map.find(log_level);
+  if (it != log_level_map.end()) {
+    spdlog::set_level(it->second);
+    spdlog::info("Log level set to {}", log_level);
+  } else {
+    std::cerr << "Invalid log level: " << log_level << std::endl;
+    show_usage(argv[0]);
+    return 1;
+  }
+
+  // ==========================
+  // udp communication
+  int udp_sockfd;
+  struct sockaddr_in server_addr;
 
   // 创建 UDP socket
   if ((udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
