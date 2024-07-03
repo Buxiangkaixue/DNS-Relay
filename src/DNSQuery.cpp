@@ -6,9 +6,14 @@
 // 构造函数定义
 DNSQuery::DNSQuery(LRUCache<std::string, IP_Result> &cache,
                    FileDatabase &database)
-    : cache(cache), database(database) {}
+    : cache(cache), database(database) {
+    blocked_domains = {"test0"};
+}
 
 std::optional<IP_Result> DNSQuery::dns_query(const std::string &domain) {
+  if (blocked_domains.find(domain) != blocked_domains.end()) {
+    return IP_Result(); // 返回空以指示域名被屏蔽
+  }
 
   // 如果数据库存在，先从数据库中查找
   auto ip_result = database.get(domain);

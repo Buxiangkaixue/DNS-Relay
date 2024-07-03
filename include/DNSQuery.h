@@ -8,6 +8,7 @@
 #include <string>
 #include <optional>
 #include <memory>
+#include <set>
 
 class DNSQuery {
 public:
@@ -18,6 +19,7 @@ public:
 private:
   LRUCache<std::string, IP_Result>& cache;
   FileDatabase& database;
+  std::set<std::string> blocked_domains;
 };
 
 #endif // DNS_RELAY_DNSQUERY_H

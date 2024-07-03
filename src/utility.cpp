@@ -56,8 +56,16 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
 
   std::vector<uint8_t> response(
       query, query + query_len); // Start with the original query
-  response[2] = 0x81;            // Set the response flags
-  response[3] = 0x80;            // Set the response flags
+
+  if(ip_result.ipv4.empty() && ip_result.ipv6.empty()) {
+    response[2] = 0x81; // QR = 1, Opcode = 0, AA = 0, TC = 0, RD = 1
+    response[3] = 0x83; // RA = 1, Z = 0, RCODE = 3 (NXDOMAIN)
+    response.resize(query_len); // Remove any additional data
+    return response;
+  }
+
+  response[2] = 0x81; // Set the response flags
+  response[3] = 0x80; // Set the response flags
 
   uint16_t qtype = (query[query_len - 4] << 8) | query[query_len - 3];
 
@@ -69,7 +77,9 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
     ips = ip_result.ipv6;
   }
   if (std::find(ips.begin(), ips.end(), std::string("0.0.0.0")) != ips.end()) {
-    return build_dns_response(query, query_len, IP_Result());
+    response[3] = 0x83;
+    response.resize(query_len);
+    return response;
   }
 
   // Calculate the number of answers
