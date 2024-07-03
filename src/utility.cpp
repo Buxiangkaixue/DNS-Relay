@@ -3,33 +3,35 @@
 #include <algorithm> // 添加这个包含头文件用于 std::find
 #include <arpa/inet.h>
 #include <fmt/format.h>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <vector>
 
 void print_dns_query_result(const IP_Result &ip_ret) {
   if (!ip_ret.ipv4.empty()) {
-    fmt::print("IPv4: ");
+    spdlog::info("IPv4: ");
     for (auto ipv4 : ip_ret.ipv4) {
-      fmt::print("{}, ", ipv4);
+      spdlog::info("{}, ", ipv4);
     }
-    fmt::print("\n");
+    spdlog::info("\n");
   }
   if (!ip_ret.ipv6.empty()) {
-    fmt::print("IPv6: ");
+    spdlog::info("IPv6: ");
     for (auto ipv6 : ip_ret.ipv6) {
-      fmt::print("{}, ", ipv6);
+      spdlog::info("{}, ", ipv6);
     }
-    fmt::print("\n");
+    spdlog::info("\n");
   }
 }
 
 void print_hex(const char *data, size_t len) {
+  std::string hex_output;
   for (size_t i = 0; i < len; ++i) {
     printf("%02x ", (unsigned char)data[i]);
     if ((i + 1) % 16 == 0)
-      printf("\n");
+      hex_output += "\n";
   }
-  printf("\n");
+  spdlog::debug("{}", hex_output);
 }
 
 std::string extract_domain_name(const char *buffer, ssize_t len) {
@@ -58,6 +60,7 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
       query, query + query_len); // Start with the original query
 
   if(ip_result.ipv4.empty() && ip_result.ipv6.empty()) {
+    spdlog::debug("Empty IP result, returning NXDOMAIN");
     response[2] = 0x81; // QR = 1, Opcode = 0, AA = 0, TC = 0, RD = 1
     response[3] = 0x83; // RA = 1, Z = 0, RCODE = 3 (NXDOMAIN)
     response.resize(query_len); // Remove any additional data
@@ -77,6 +80,7 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
     ips = ip_result.ipv6;
   }
   if (std::find(ips.begin(), ips.end(), std::string("0.0.0.0")) != ips.end()) {
+    spdlog::debug("IP result contains 0.0.0.0, returning NXDOMAIN");
     response[3] = 0x83;
     response.resize(query_len);
     return response;

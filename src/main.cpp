@@ -15,9 +15,30 @@
 
 constexpr int PORT = 53;
 
-int main() {
+int main(int argc, char *argv[]) {
   int udp_sockfd;
   struct sockaddr_in server_addr;
+
+  // 解析命令行参数
+  int debug_level = 0;
+  int opt;
+  while ((opt = getopt(argc, argv, "d")) != -1) {
+      switch (opt) {
+          case 'd':
+              debug_level++;
+              break;
+          default:
+              std::cerr << "Usage: " << argv[0] << " [-d]" << std::endl;
+              exit(EXIT_FAILURE);
+      }
+  }
+
+    // 设置日志级别
+    if (debug_level == 1) {
+        spdlog::set_level(spdlog::level::debug); // 启用基本调试模式
+    } else if (debug_level > 1) {
+        spdlog::set_level(spdlog::level::trace); // 启用详细调试模式
+    }
 
   // 创建 UDP socket
   if ((udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
