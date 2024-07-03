@@ -3,8 +3,8 @@
 // Created by stellaura on 02/07/24.
 //
 
-#ifndef DNS_RELAY_LRUCACHE_H
-#define DNS_RELAY_LRUCACHE_H
+#ifndef DNS_RELAY_LRU_CACHE_H
+#define DNS_RELAY_LRU_CACHE_H
 
 #include <list>
 #include <mutex>
@@ -12,8 +12,8 @@
 #include <stdexcept>
 #include <unordered_map>
 
-// 预先定义的 LRUCache 类
-template <typename Key, typename Value> class LRUCache {
+// 预先定义的 LRU_Cache 类
+template <typename Key, typename Value> class LRU_Cache {
 private:
   std::list<std::pair<Key, Value>> cacheItemsList_;
   std::unordered_map<Key, typename std::list<std::pair<Key, Value>>::iterator>
@@ -21,7 +21,7 @@ private:
   size_t capacity_;
 
 public:
-  LRUCache(size_t capacity) : capacity_(capacity) {}
+  LRU_Cache(size_t capacity) : capacity_(capacity) {}
 
   Value get(const Key &key) {
     auto it = cacheMap_.find(key);
@@ -68,4 +68,4 @@ public:
   }
 };
 
-#endif // DNS_RELAY_LRUCACHE_H
+#endif // DNS_RELAY_LRU_CACHE_H

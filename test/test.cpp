@@ -3,7 +3,7 @@
 //
 #include "DNSQuery.h"
 #include "FileDatabase.h"
-#include "LRUCache.h"
+#include "LRU_Cache.h"
 #include "utility.h"
 
 #include <catch2/catch_all.hpp>
@@ -21,7 +21,7 @@ TEST_CASE("test for catch2", "[test]") {
 }
 
 TEST_CASE("test for LRU Cache", "[test]") {
-  LRUCache<int, std::string> cache(2);
+  LRU_Cache<int, std::string> cache(2);
   cache.put(1, "a");
   REQUIRE("a" == cache.get(1));
   cache.put(1, "b");
@@ -52,7 +52,7 @@ TEST_CASE("test for Database File", "[file database]") {
 }
 
 TEST_CASE("test dns query") {
-  LRUCache<std::string, IP_Result> cache(3);
+  LRU_Cache<std::string, IP_Result> cache(3);
   std::string file_path =
       "/home/stellaura/Programs/c++/DNS-Relay/data/dnsrelay.txt";
   FileDatabase file_database(file_path);

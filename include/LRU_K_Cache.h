@@ -1,14 +1,14 @@
-#ifndef DNS_RELAY_LRU_KCACHE_H
-#define DNS_RELAY_LRU_KCACHE_H
+#ifndef DNS_RELAY_LRU_K_CACHE_H
+#define DNS_RELAY_LRU_K_CACHE_H
 
-#include "LRUCache.h"
+#include "LRU_Cache.h"
 
 // LRU-KCache 类
 template <typename Key, typename Value, size_t K>
-class LRU_KCache {
+class LRU_K_Cache {
 private:
-  LRUCache<Key, std::pair<Value, size_t>> tempCache_; // 包含访问计数
-  LRUCache<Key, Value> permanentCache_;               // 持久缓存
+  LRU_Cache<Key, std::pair<Value, size_t>> tempCache_; // 包含访问计数
+  LRU_Cache<Key, Value> permanentCache_;               // 持久缓存
   size_t capacity_;
   
   void promoteToPermanent(const Key &key, std::pair<Value, size_t> &valueCountPair) {
@@ -22,7 +22,7 @@ private:
   }
 
 public:
-  LRU_KCache(size_t capacity)
+  LRU_K_Cache(size_t capacity)
       : capacity_(capacity),
         tempCache_(capacity / 10),
         permanentCache_(capacity - capacity / 10) {}
@@ -53,4 +53,4 @@ public:
 };
 
 
-#endif // DNS_RELAY_LRU_KCACHE_H
+#endif // DNS_RELAY_LRU_K_CACHE_H
