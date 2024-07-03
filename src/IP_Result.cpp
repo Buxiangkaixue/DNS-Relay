@@ -1,5 +1,6 @@
 #include "IP_Result.h"
 
+// IP_Result 构造函数的实现
 IP_Result::IP_Result() = default;
 IP_Result::IP_Result(const std::vector<std::string> &ipv4,
                      const std::vector<std::string> &ipv6)
