@@ -22,7 +22,7 @@ public:
 
   std::optional<IP_Result> dns_query(const std::string &domain) {
     if (blocked_domains.find(domain) != blocked_domains.end()) {
-      return std::nullopt; // 返回空以指示域名被屏蔽
+      return IP_Result(); // 返回空以指示域名被屏蔽
     }
 
     // 如果数据库存在，先从数据库中查找
