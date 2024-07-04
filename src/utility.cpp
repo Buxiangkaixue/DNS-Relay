@@ -24,15 +24,25 @@ void print_dns_query_result(const IP_Result &ip_ret) {
   }
 }
 
+#include <spdlog/spdlog.h>
+#include <iomanip>
+#include <sstream>
+#include <string>
+
 void print_hex(const char *data, size_t len) {
+  std::ostringstream oss;
   std::string hex_output;
   for (size_t i = 0; i < len; ++i) {
-    printf("%02x ", (unsigned char)data[i]);
-    if ((i + 1) % 16 == 0)
-      hex_output += "\n";
+    oss << std::hex << std::setw(2) << std::setfill('0') << (static_cast<unsigned int>(data[i]) & 0xff) << " ";
+    if ((i + 1) % 16 == 0 || i + 1 == len) {
+      hex_output += oss.str() + "\n";
+      oss.str("");
+      oss.clear();
+    }
   }
-  spdlog::debug("{}", hex_output);
+  spdlog::debug("Hex output:\n{}", hex_output);
 }
+
 
 std::string extract_domain_name(const char *buffer, ssize_t len) {
   std::string domain_name;

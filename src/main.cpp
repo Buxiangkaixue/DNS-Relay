@@ -1,6 +1,7 @@
 #include "DNSQuery.h"
 #include "FileDatabase.h"
 #include "LRU_K_Cache.h"
+#include "log_initialization.h"
 #include "thread_handle.h"
 #include "utility.h"
 
@@ -16,55 +17,7 @@
 
 constexpr int PORT = 53;
 
-// 映射日志等级字符串到spdlog的等级
-std::map<std::string, spdlog::level::level_enum> log_level_map = {
-    {"trace", spdlog::level::trace}, {"debug", spdlog::level::debug},
-    {"info", spdlog::level::info},   {"warn", spdlog::level::warn},
-    {"error", spdlog::level::err},   {"critical", spdlog::level::critical},
-    {"off", spdlog::level::off}};
-
-void show_usage(const std::string &prog_name) {
-  std::cerr << "Usage: " << prog_name << " [-l log_level] [-h]" << std::endl;
-  std::cerr << "  -l log_level   Set log level (trace, debug, info, warn, "
-               "error, critical, off)"
-            << std::endl;
-  std::cerr << "  -h             Show this help message" << std::endl;
-}
-
-int main(int argc, char *argv[]) {
-  // ==========================
-  // log level setting
-  int opt;
-  std::string log_level = "info"; // 默认日志等级为info
-
-  // 解析命令行参数
-  while ((opt = getopt(argc, argv, "l:h")) != -1) {
-    switch (opt) {
-    case 'l':
-      log_level = optarg;
-      break;
-    case 'h':
-      show_usage(argv[0]);
-      return 0;
-    default:
-      show_usage(argv[0]);
-      return 1;
-    }
-  }
-
-  // 设置日志级别
-  auto it = log_level_map.find(log_level);
-  if (it != log_level_map.end()) {
-    spdlog::set_level(it->second);
-    spdlog::info("Log level set to {}", log_level);
-  } else {
-    std::cerr << "Invalid log level: " << log_level << std::endl;
-    show_usage(argv[0]);
-    return 1;
-  }
-
-  // ==========================
-  // udp communication
+int initialize_udp_socket() {
   int udp_sockfd;
   struct sockaddr_in server_addr;
 
@@ -90,6 +43,38 @@ int main(int argc, char *argv[]) {
 
   std::cout << "Listening on 127.0.0.1:" << PORT << " for DNS queries..."
             << std::endl;
+
+  return udp_sockfd;
+}
+
+void handle_command_line_arguments(int argc, char *argv[],
+                                   std::string &log_level) {
+  int opt;
+  while ((opt = getopt(argc, argv, "l:h")) != -1) {
+    switch (opt) {
+    case 'l':
+      log_level = optarg;
+      break;
+    case 'h':
+      show_usage(argv[0]);
+      exit(0);
+    default:
+      show_usage(argv[0]);
+      exit(1);
+    }
+  }
+}
+
+int main(int argc, char *argv[]) {
+  // 处理命令行参数
+  std::string log_level = "info"; // 默认日志等级为info
+  handle_command_line_arguments(argc, argv, log_level);
+
+  // 初始化日志
+  initialize_logging(log_level);
+
+  // 初始化 UDP
+  int udp_sockfd = initialize_udp_socket();
 
   // 初始化程序查询
   const std::string file_path = "../data/dnsrelay.txt";

@@ -75,7 +75,6 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database) {
 
     spdlog::debug("Received DNS query:");
     print_hex((const char *)buffer.data(), n);
-    fmt::print("\n");
 
     // 创建新线程处理每个查询
     std::thread request_thread(handle_request<Cache>, sockfd, client_addr,
