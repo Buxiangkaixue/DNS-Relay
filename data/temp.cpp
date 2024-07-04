@@ -6,7 +6,6 @@
 #include <stdexcept>
 #include <spdlog/spdlog.h>
 
-
 FileDatabase::FileDatabase() {
   spdlog::info("FileDatabase: Default constructor called");
 }

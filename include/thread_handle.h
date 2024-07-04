@@ -11,8 +11,8 @@
 #include "IP_Result.h"
 #include "utility.h"
 
-#include <fmt/format.h>
 #include <arpa/inet.h>
+#include <fmt/format.h>
 #include <spdlog/spdlog.h>
 #include <string>
 #include <thread>
@@ -24,7 +24,8 @@ template <typename Cache>
 void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
                     std::vector<uint8_t> request, Cache &cache,
                     FileDatabase &file_database) {
-  DNSQuery dns_query(cache, file_database);
+  DNSQuery dns_query(cache, file_database,
+                     {"test0", "baidu.com", "bilibili.com"});
   std::string domain_name = extract_domain_name(
       (const char *)request.data(), request.size()); // 正确的调用方式
   spdlog::info("domain name: {}", domain_name);
@@ -35,16 +36,14 @@ void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
 
   auto ip_result = dns_query.dns_query(domain_name);
 
-  if (ip_result) {
-    print_dns_query_result(*ip_result);
-    // 构建 DNS 响应包
-    std::vector<uint8_t> response = build_dns_response(
-        (const char *)request.data(), request.size(), *ip_result);
+  print_dns_query_result(ip_result);
+  // 构建 DNS 响应包
+  std::vector<uint8_t> response = build_dns_response(
+      (const char *)request.data(), request.size(), ip_result);
 
-    // 发送 DNS 响应包
-    sendto(sockfd, response.data(), response.size(), 0,
-           (struct sockaddr *)&client_addr, addr_len);
-  }
+  // 发送 DNS 响应包
+  sendto(sockfd, response.data(), response.size(), 0,
+         (struct sockaddr *)&client_addr, addr_len);
 }
 
 template <typename Cache>

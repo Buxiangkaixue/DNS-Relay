@@ -7,11 +7,14 @@
 #include <cstring>
 #include <iostream>
 #include <netdb.h>
+#include <spdlog/spdlog.h>
 #include <string>
 #include <sys/socket.h>
 #include <vector>
 
 IP_Result dns_resolve_hostname(const std::string &hostname) {
+  spdlog::info("Resolving hostname: {}", hostname);
+
   addrinfo hints; // 查询的配置文件 指定了查询的方式
   addrinfo *res;  // 查询的结果的返回位置 是一个链表
 
@@ -30,7 +33,7 @@ IP_Result dns_resolve_hostname(const std::string &hostname) {
   int status;
   // 因为需要修改res指针的值，需要对指针取地址
   if ((status = getaddrinfo(hostname.c_str(), NULL, &hints, &res)) != 0) {
-    std::cerr << "getaddrinfo: " << gai_strerror(status) << std::endl;
+    spdlog::error("getaddrinfo: {}", gai_strerror(status));
     return {ipv4_addresses, ipv6_addresses};
   }
 
@@ -42,16 +45,19 @@ IP_Result dns_resolve_hostname(const std::string &hostname) {
       sockaddr_in *ipv4 = (sockaddr_in *)p->ai_addr;
       addr = &(ipv4->sin_addr);
       inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+      spdlog::trace("Found IPv4 address: {}", ipstr);
       ipv4_addresses.push_back(ipstr);
     } else { // IPv6
       sockaddr_in6 *ipv6 = (sockaddr_in6 *)p->ai_addr;
       addr = &(ipv6->sin6_addr);
       inet_ntop(p->ai_family, addr, ipstr, sizeof(ipstr));
+      spdlog::trace("Found IPv6 address: {}", ipstr);
       ipv6_addresses.push_back(ipstr);
     }
   }
 
   freeaddrinfo(res); // free the linked list
-
+  spdlog::info("Resolved {}: {} IPv4 addresses, {} IPv6 addresses", hostname,
+               ipv4_addresses.size(), ipv6_addresses.size());
   return {ipv4_addresses, ipv6_addresses};
 }
