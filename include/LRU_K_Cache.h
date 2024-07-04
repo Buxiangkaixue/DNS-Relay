@@ -4,22 +4,25 @@
 #include "LRU_Cache.h"
 #include <stdexcept>
 
-template <typename Key, typename Value, size_t K> class LRU_K_Cache {
+template <typename Key, typename Value, size_t NUM_K> class LRU_K_Cache {
 private:
   LRU_Cache<Key, std::pair<Value, size_t>> tempCache_; // 包含访问计数
   LRU_Cache<Key, Value> permanentCache_;               // 持久缓存
   size_t capacity_;
   mutable std::shared_mutex mutex_;
 
+  // 这里肯定是可以万能引用优化的 但是 由于 std::pair<Value, size_t>
+  // 里面的东西太多太复杂 不太好处理 可能要拆开处理
+  // TODO
   void tempKeyCountIncrease(const Key &key,
                             std::pair<Value, size_t> &valueCountPair) {
     valueCountPair.second += 1;
     spdlog::debug("In LRU_K_Cache: increase key count with key {} and count {}",
                   key, valueCountPair.second);
-    if (valueCountPair.second >= K) {
+    if (valueCountPair.second >= NUM_K) {
       spdlog::info("In LRU_K_Cache: key {} has reached threshold {} and is "
                    "promoted to permanent cache",
-                   key, K);
+                   key, NUM_K);
       permanentCache_.put(key, valueCountPair.first);
       tempCache_.remove(key);
     } else {
@@ -51,19 +54,22 @@ public:
     }
   }
 
-  void put(const Key &key, const Value &value) {
+  template <typename K, typename V>
+    requires std::is_same_v<std::decay_t<K>, Key> &&
+             std::is_same_v<std::decay_t<V>, Value>
+  void put(K &&key, V &&value) {
     std::unique_lock lock(mutex_);
     spdlog::debug("In LRU_K_Cache: putting key {} with value {}", key, value);
     if (permanentCache_.contains(key)) {
       spdlog::debug(
           "In LRU_K_Cache: key {} already in permanent cache, updating value",
           key);
-      permanentCache_.put(key, value);
+      permanentCache_.put(std::forward<K>(key), std::forward<V>(value));
     } else if (tempCache_.contains(key)) {
       spdlog::debug(
           "In LRU_K_Cache: key {} already in temp cache, updating value", key);
       auto valueCountPair = tempCache_.get(key);
-      valueCountPair.first = value;
+      valueCountPair.first = std::forward<V>(value);
       tempKeyCountIncrease(key, valueCountPair);
     } else {
       spdlog::debug("In LRU_K_Cache: key {} not in cache, adding to temp cache",
@@ -73,7 +79,9 @@ public:
                      "temp cache");
         tempCache_.remove_oldest();
       }
-      tempCache_.put(key, {value, 1});
+      tempCache_.put(
+          std::forward<K>(key),
+          std::make_pair(std::forward<V>(value), static_cast<size_t>(1)));
     }
   }
 };

@@ -11,15 +11,19 @@
 #include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <string>
+#include <type_traits>
+#include <utility>
 
 template <typename Cache>
   requires CacheConcept<Cache, std::string, IP_Result>
 class DNSQuery {
 public:
-  DNSQuery(Cache &cache, FileDatabase &database,
-           const std::vector<std::string> &blocked_domains = {})
+  template <typename T>
+    requires std::is_same_v<std::decay_t<T>, std::vector<std::string>>
+  DNSQuery(Cache &cache, FileDatabase &database, T &&blocked_domains = {})
       : cache(cache), database(database),
-        blocked_domains(blocked_domains.begin(), blocked_domains.end()) {
+        blocked_domains(std::forward<T>(blocked_domains).begin(),
+                        std::forward<T>(blocked_domains).end()) {
     spdlog::info(
         "In DNSQuery: DNSQuery object created with initial blocked domains: {}",
         fmt::join(blocked_domains, ", "));

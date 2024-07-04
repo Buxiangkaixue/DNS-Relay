@@ -8,6 +8,9 @@
 #include <iostream>
 #include <spdlog/spdlog.h>
 
+using namespace std::string_literals; // enables s-suffix for std::string
+                                      // literals
+
 TEST_CASE("test for catch2", "[test]") {
 
   fmt::print("Hello, {}!\n", "world");
@@ -19,13 +22,13 @@ TEST_CASE("test for catch2", "[test]") {
 
 TEST_CASE("test for LRU Cache", "[test]") {
   LRU_Cache<int, std::string> cache(2);
-  cache.put(1, "a");
+  cache.put(1, "a"s);
   REQUIRE("a" == cache.get(1));
-  cache.put(1, "b");
+  cache.put(1, "b"s);
   REQUIRE("b" == cache.get(1));
-  cache.put(2, "c");
+  cache.put(2, "c"s);
   REQUIRE("c" == cache.get(2));
-  cache.put(3, "d");
+  cache.put(3, "d"s);
   REQUIRE("d" == cache.get(3));
   try {
     cache.get(1);
@@ -53,7 +56,7 @@ TEST_CASE("test dns query") {
   std::string file_path =
       "/home/stellaura/Programs/c++/DNS-Relay/data/dnsrelay.txt";
   FileDatabase file_database(file_path);
-  DNSQuery dns_query(cache, file_database);
+  DNSQuery dns_query(cache, file_database, std::vector<std::string>());
 
   std::optional<IP_Result> ret;
   for (auto s : {"baidu.com", "a.com", "b.com"}) {

@@ -1,11 +1,10 @@
 #ifndef DNS_RELAY_LRU_CACHE_H
 #define DNS_RELAY_LRU_CACHE_H
 
-#include <spdlog/spdlog.h>
-
 #include <list>
 #include <mutex>
 #include <shared_mutex>
+#include <spdlog/spdlog.h>
 #include <stdexcept>
 #include <unordered_map>
 
@@ -36,13 +35,16 @@ public:
     return it->second->second;
   }
 
-  void put(const Key &key, const Value &value) {
+  template <typename K, typename V>
+    requires std::is_same_v<std::decay_t<K>, Key> &&
+             std::is_same_v<std::decay_t<V>, Value>
+  void put(K &&key, V &&value) {
     std::unique_lock lock(mutex_);
     auto it = cacheMap_.find(key);
     if (it != cacheMap_.end()) {
       cacheItemsList_.splice(cacheItemsList_.begin(), cacheItemsList_,
                              it->second);
-      it->second->second = value;
+      it->second->second = std::forward<V>(value);
       spdlog::debug("Key {} updated with value {}", key, value);
       return;
     }
@@ -55,8 +57,10 @@ public:
       cacheItemsList_.pop_back();
     }
 
-    cacheItemsList_.emplace_front(key, value);
-    cacheMap_[key] = cacheItemsList_.begin();
+    // 首先插入新元素
+    cacheItemsList_.emplace_front(std::forward<K>(key), std::forward<V>(value));
+    // 然后更新哈希表，使其指向新插入的元素
+    cacheMap_[cacheItemsList_.front().first] = cacheItemsList_.begin();
     spdlog::debug("Key {} inserted with value {}", key, value);
   }
 

@@ -10,6 +10,9 @@
 #include "FileDatabase.h"
 #include "IP_Result.h"
 #include "utility.h"
+//
+// Created by stellaura on 04/07/24.
+//
 
 #include <arpa/inet.h>
 #include <fmt/format.h>
@@ -24,8 +27,9 @@ template <typename Cache>
 void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
                     std::vector<uint8_t> request, Cache &cache,
                     FileDatabase &file_database) {
-  DNSQuery dns_query(cache, file_database,
-                     {"test0", "baidu.com", "bilibili.com"});
+  DNSQuery dns_query(
+      cache, file_database,
+      std::vector<std::string>{"test0", "baidu.com", "bilibili.com"});
   std::string domain_name = extract_domain_name(
       (const char *)request.data(), request.size()); // 正确的调用方式
   spdlog::info("domain name: {}", domain_name);

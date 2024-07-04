@@ -53,6 +53,8 @@ std::string extract_domain_name(const char *buffer, ssize_t len) {
   return domain_name;
 }
 
+// 这里面的IP_Result其实是可以进行万能引用优化的
+// TODO IP_Result 万能引用优化
 std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
                                         const IP_Result &ip_result) {
 
