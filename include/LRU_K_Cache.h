@@ -45,9 +45,21 @@ public:
       return permanentCache_.get(key);
     } else if (tempCache_.contains(key)) {
       spdlog::debug("In LRU_K_Cache: key {} found in temp cache", key);
-      auto valueCountPair = tempCache_.get(key);
-      tempKeyCountIncrease(key, valueCountPair);
-      return valueCountPair.first;
+      auto &valueCountPair = tempCache_.get_ref(key);
+      valueCountPair.second += 1;
+      if (valueCountPair.second >= NUM_K) {
+        spdlog::info("In LRU_K_Cache: key {} has reached threshold {} and is "
+                     "promoted to permanent cache",
+                     key, NUM_K);
+        Value ret = valueCountPair.first;
+        permanentCache_.put(key, std::move(valueCountPair.first));
+        tempCache_.remove(key);
+        return ret;
+      } else {
+        tempCache_.put(key, valueCountPair);
+        return valueCountPair.first;
+      }
+
     } else {
       spdlog::warn("In LRU_K_Cache: key {} not found in cache", key);
       throw std::runtime_error("Key not found");
@@ -68,9 +80,18 @@ public:
     } else if (tempCache_.contains(key)) {
       spdlog::debug(
           "In LRU_K_Cache: key {} already in temp cache, updating value", key);
-      auto valueCountPair = tempCache_.get(key);
-      valueCountPair.first = std::forward<V>(value);
-      tempKeyCountIncrease(key, valueCountPair);
+      auto &valueCountPair = tempCache_.get_ref(key);
+      valueCountPair.second += 1;
+      if (valueCountPair.second >= NUM_K) {
+        spdlog::info("In LRU_K_Cache: key {} has reached threshold {} and is "
+                     "promoted to permanent cache",
+                     key, NUM_K);
+        permanentCache_.put(std::forward<K>(key), std::move(value));
+        tempCache_.remove(key);
+      } else {
+        valueCountPair.first = std::forward<V>(value);
+        tempCache_.put(key, valueCountPair);
+      }
     } else {
       spdlog::debug("In LRU_K_Cache: key {} not in cache, adding to temp cache",
                     key);
