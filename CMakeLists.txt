@@ -24,7 +24,6 @@ find_package(spdlog REQUIRED)
 
 # 获取所有的源文件
 file(GLOB_RECURSE source_files ${CMAKE_SOURCE_DIR}/src/*.cpp)
-file(GLOB_RECURSE test_files ${CMAKE_SOURCE_DIR}/test/*.cpp)
 
 # 排除main.cpp
 list(FILTER source_files EXCLUDE REGEX "main\\.cpp$")
@@ -43,11 +42,14 @@ target_link_libraries(${ProjectName} PRIVATE fmt::fmt)
 target_link_libraries(${ProjectName} PRIVATE spdlog::spdlog)
 
 # 创建测试可执行文件
-add_executable(${ProjectName}_test ${test_files})
+add_executable(${ProjectName}_test ${CMAKE_SOURCE_DIR}/test/test.cpp)
 target_link_libraries(${ProjectName}_test PRIVATE ${ProjectName}_lib)
 target_link_libraries(${ProjectName}_test PRIVATE Catch2::Catch2WithMain)
 target_link_libraries(${ProjectName}_test PRIVATE fmt::fmt)
 target_link_libraries(${ProjectName}_test PRIVATE spdlog::spdlog)
+
+# stress test
+add_executable(${ProjectName}_stress_test ${CMAKE_SOURCE_DIR}/test/stress_test.cpp)
 
 # 设置输出路径
 set_target_properties(${ProjectName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})

@@ -4,6 +4,7 @@
 #include "log_initialization.h"
 #include "thread_handle.h"
 #include "utility.h"
+#include "show_help.h"
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -16,6 +17,7 @@
 #include <vector>
 
 constexpr int PORT = 53;
+
 
 int initialize_udp_socket() {
   int udp_sockfd;
@@ -48,12 +50,15 @@ int initialize_udp_socket() {
 }
 
 void handle_command_line_arguments(int argc, char *argv[],
-                                   std::string &log_level) {
+                                   std::string &log_level, int &thread_count) {
   int opt;
-  while ((opt = getopt(argc, argv, "l:h")) != -1) {
+  while ((opt = getopt(argc, argv, "l:t:h")) != -1) {
     switch (opt) {
     case 'l':
       log_level = optarg;
+      break;
+    case 't':
+      thread_count = std::stoi(optarg);
       break;
     case 'h':
       show_usage(argv[0]);
@@ -68,7 +73,9 @@ void handle_command_line_arguments(int argc, char *argv[],
 int main(int argc, char *argv[]) {
   // 处理命令行参数
   std::string log_level = "info"; // 默认日志等级为info
-  handle_command_line_arguments(argc, argv, log_level);
+  int thread_count = 4;           // 默认线程数量为4
+  handle_command_line_arguments(argc, argv, log_level, thread_count);
+  spdlog::info("Thread number is {}", thread_count);
 
   // 初始化日志
   initialize_logging(log_level);
@@ -81,12 +88,12 @@ int main(int argc, char *argv[]) {
   LRU_K_Cache<std::string, IP_Result, 2> cache(10);
   FileDatabase file_database(file_path);
 
-  // 启动 UDP 处理线程
-  std::thread udp_thread(handle_udp<LRU_K_Cache<std::string, IP_Result, 2>>,
-                         udp_sockfd, std::ref(cache), std::ref(file_database));
+  // 创建线程池
+  ThreadPool thread_pool(thread_count); // 例如4个线程
 
-  // 等待线程结束（实际上不会结束，因为handle_udp是一个无限循环）
-  udp_thread.join();
+  // 启动 UDP 处理
+  handle_udp<LRU_K_Cache<std::string, IP_Result, 2>>(
+      udp_sockfd, cache, file_database, thread_pool);
 
   close(udp_sockfd);
 

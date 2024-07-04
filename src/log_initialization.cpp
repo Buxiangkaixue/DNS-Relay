@@ -10,13 +10,7 @@ std::map<std::string, spdlog::level::level_enum> log_level_map = {
     {"error", spdlog::level::err},   {"critical", spdlog::level::critical},
     {"off", spdlog::level::off}};
 
-void show_usage(const std::string &prog_name) {
-  std::cerr << "Usage: " << prog_name << " [-l log_level] [-h]" << std::endl;
-  std::cerr << "  -l log_level   Set log level (trace, debug, info, warn, "
-               "error, critical, off)"
-            << std::endl;
-  std::cerr << "  -h             Show this help message" << std::endl;
-}
+
 
 void initialize_logging(const std::string &log_level) {
   auto it = log_level_map.find(log_level);
