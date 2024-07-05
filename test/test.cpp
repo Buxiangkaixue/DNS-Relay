@@ -51,12 +51,13 @@ TEST_CASE("test for Database File", "[file database]") {
   REQUIRE(!file_database.get("c.com").has_value());
 }
 
-TEST_CASE("test dns query") {
+TEST_CASE("test dns query", "[dns_query]") {
   LRU_Cache<std::string, IP_Result> cache(3);
   std::string file_path =
       "/home/stellaura/Programs/c++/DNS-Relay/data/dnsrelay.txt";
   FileDatabase file_database(file_path);
-  DNSQuery dns_query(cache, file_database, std::vector<std::string>());
+  DNSQuery dns_query(cache, file_database, std::string("8.8.8.8"),
+                     std::vector<std::string>());
 
   std::optional<IP_Result> ret;
   for (auto s : {"baidu.com", "a.com", "b.com"}) {

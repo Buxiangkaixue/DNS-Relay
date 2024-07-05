@@ -2,9 +2,9 @@
 #include "FileDatabase.h"
 #include "LRU_K_Cache.h"
 #include "log_initialization.h"
+#include "show_help.h"
 #include "thread_handle.h"
 #include "utility.h"
-#include "show_help.h"
 
 #include <arpa/inet.h>
 #include <cstring>
@@ -17,7 +17,6 @@
 #include <vector>
 
 constexpr int PORT = 53;
-
 
 int initialize_udp_socket() {
   int udp_sockfd;
@@ -50,15 +49,19 @@ int initialize_udp_socket() {
 }
 
 void handle_command_line_arguments(int argc, char *argv[],
-                                   std::string &log_level, int &thread_count) {
+                                   std::string &log_level, int &thread_count,
+                                   std::string &dns_server) {
   int opt;
-  while ((opt = getopt(argc, argv, "l:t:h")) != -1) {
+  while ((opt = getopt(argc, argv, "l:t:d:h")) != -1) {
     switch (opt) {
     case 'l':
       log_level = optarg;
       break;
     case 't':
       thread_count = std::stoi(optarg);
+      break;
+    case 'd':
+      dns_server = optarg;
       break;
     case 'h':
       show_usage(argv[0]);
@@ -74,7 +77,8 @@ int main(int argc, char *argv[]) {
   // 处理命令行参数
   std::string log_level = "info"; // 默认日志等级为info
   int thread_count = 4;           // 默认线程数量为4
-  handle_command_line_arguments(argc, argv, log_level, thread_count);
+  std::string dns_sever = "8.8.8.8";
+  handle_command_line_arguments(argc, argv, log_level, thread_count, dns_sever);
   spdlog::info("Thread number is {}", thread_count);
 
   // 初始化日志
@@ -93,7 +97,7 @@ int main(int argc, char *argv[]) {
 
   // 启动 UDP 处理
   handle_udp<LRU_K_Cache<std::string, IP_Result, 2>>(
-      udp_sockfd, cache, file_database, thread_pool);
+      udp_sockfd, cache, file_database, dns_sever, thread_pool);
 
   close(udp_sockfd);
 

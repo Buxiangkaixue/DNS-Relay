@@ -20,8 +20,9 @@ class DNSQuery {
 public:
   template <typename T>
     requires std::is_same_v<std::decay_t<T>, std::vector<std::string>>
-  DNSQuery(Cache &cache, FileDatabase &database, T &&blocked_domains = {})
-      : cache(cache), database(database),
+  DNSQuery(Cache &cache, FileDatabase &database, const std::string &dns_sever,
+           T &&blocked_domains = {})
+      : cache(cache), database(database), dns_sever(dns_sever),
         blocked_domains(std::forward<T>(blocked_domains).begin(),
                         std::forward<T>(blocked_domains).end()) {
     spdlog::info(
@@ -54,7 +55,7 @@ public:
     }
 
     // 通过解析主机名获取结果
-    auto resolvedResult = dns_resolve_hostname(domain);
+    auto resolvedResult = dns_resolve_hostname(domain, dns_sever);
     spdlog::info("In DNSQuery: Domain {} resolved via DNS", domain);
     spdlog::debug("In DNSQuery: Domain {} is put into Cache", domain);
     cache.put(domain, resolvedResult);
@@ -65,6 +66,7 @@ private:
   Cache &cache;
   FileDatabase &database;
   std::set<std::string> blocked_domains;
+  std::string dns_sever;
 };
 
 #endif // DNS_RELAY_DNSQUERY_H

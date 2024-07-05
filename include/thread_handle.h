@@ -24,9 +24,9 @@ template <typename Cache>
   requires CacheConcept<Cache, std::string, IP_Result>
 void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
                     std::vector<uint8_t> request, Cache &cache,
-                    FileDatabase &file_database) {
+                    FileDatabase &file_database, const std::string &dns_sever) {
   DNSQuery dns_query(
-      cache, file_database,
+      cache, file_database, dns_sever,
       std::vector<std::string>{"test0", "baidu.com", "bilibili.com"});
   std::string domain_name = extract_domain_name(
       (const char *)request.data(), request.size()); // 正确的调用方式
@@ -51,7 +51,7 @@ void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
 template <typename Cache>
   requires CacheConcept<Cache, std::string, IP_Result>
 void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
-                ThreadPool &thread_pool) {
+                const std::string &dns_sever, ThreadPool &thread_pool) {
   while (true) {
     struct sockaddr_in client_addr;
     socklen_t addr_len = sizeof(client_addr);
@@ -78,7 +78,7 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
     // 使用线程池处理每个查询
     thread_pool.enqueue(handle_request<Cache>, sockfd, client_addr, addr_len,
                         std::move(buffer), std::ref(cache),
-                        std::ref(file_database));
+                        std::ref(file_database), dns_sever);
   }
 }
 
