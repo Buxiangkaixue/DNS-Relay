@@ -94,10 +94,10 @@ int main(int argc, char *argv[]) {
 
   // 创建线程池
   ThreadPool thread_pool(thread_count); // 例如4个线程
+  SocketPool socket_pool(dns_sever, thread_count);
 
   // 启动 UDP 处理
-  handle_udp<LRU_K_Cache<std::string, IP_Result, 2>>(
-      udp_sockfd, cache, file_database, dns_sever, thread_pool);
+  handle_udp(udp_sockfd, cache, file_database, socket_pool, thread_pool);
 
   close(udp_sockfd);
 

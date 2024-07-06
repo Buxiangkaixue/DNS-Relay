@@ -10,7 +10,6 @@
 #include <string>
 #include <vector>
 
-IP_Result dns_resolve_hostname(const std::string &hostname,
-                               const std::string &dns_server);
+IP_Result dns_resolve_hostname(int sockfd, const std::string &hostname);
 
 #endif // DNS_RELAY_DNS_QUERY_H

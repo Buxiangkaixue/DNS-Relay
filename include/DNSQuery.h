@@ -5,6 +5,7 @@
 #include "DNSResolver.h"
 #include "FileDatabase.h"
 #include "IP_Result.h"
+#include "SocketPool.h"
 
 #include <optional>
 #include <set>
@@ -20,9 +21,9 @@ class DNSQuery {
 public:
   template <typename T>
     requires std::is_same_v<std::decay_t<T>, std::vector<std::string>>
-  DNSQuery(Cache &cache, FileDatabase &database, const std::string &dns_sever,
+  DNSQuery(Cache &cache, FileDatabase &database, SocketPool &socket_pool,
            T &&blocked_domains = {})
-      : cache(cache), database(database), dns_sever(dns_sever),
+      : cache(cache), database(database), socket_pool(socket_pool),
         blocked_domains(std::forward<T>(blocked_domains).begin(),
                         std::forward<T>(blocked_domains).end()) {
     spdlog::info(
@@ -55,7 +56,11 @@ public:
     }
 
     // 通过解析主机名获取结果
-    auto resolvedResult = dns_resolve_hostname(domain, dns_sever);
+    auto socket_id = socket_pool.get_socket();
+    spdlog::info("use socket with id {}", socket_id);
+    auto resolvedResult = dns_resolve_hostname(socket_id, domain);
+    socket_pool.release_socket(socket_id);
+
     spdlog::info("In DNSQuery: Domain {} resolved via DNS", domain);
     spdlog::debug("In DNSQuery: Domain {} is put into Cache", domain);
     cache.put(domain, resolvedResult);
@@ -67,6 +72,7 @@ private:
   FileDatabase &database;
   std::set<std::string> blocked_domains;
   std::string dns_sever;
+  SocketPool &socket_pool;
 };
 
 #endif // DNS_RELAY_DNSQUERY_H

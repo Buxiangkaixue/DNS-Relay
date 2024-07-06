@@ -75,49 +75,26 @@ std::vector<uint8_t> create_dns_query(const std::string &domain,
   return query;
 }
 
-std::vector<std::string> dns_resolve_hostname_(const std::string &hostname,
-                                               const std::string &dns_server,
+std::vector<std::string> dns_resolve_hostname_(int sockfd,
+                                               const std::string &hostname,
                                                IP_TYPE query_type) {
-  spdlog::info("Resolving hostname: {} using DNS server: {}", hostname,
-               dns_server);
+  spdlog::info("Resolving hostname: {} using existing socket", hostname);
 
   std::vector<uint8_t> query = create_dns_query(hostname, query_type);
 
-  int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (sockfd < 0) {
-    spdlog::error("Socket creation failed");
-    return {};
-  }
-
-  struct timeval tv;
-  tv.tv_sec = 5; // 5 seconds timeout
-  tv.tv_usec = 0;
-  setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-  sockaddr_in server_addr;
-  memset(&server_addr, 0, sizeof(server_addr));
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(53);
-  inet_pton(AF_INET, dns_server.c_str(), &server_addr.sin_addr);
-
-  if (sendto(sockfd, query.data(), query.size(), 0, (sockaddr *)&server_addr,
-             sizeof(server_addr)) < 0) {
+  if (sendto(sockfd, query.data(), query.size(), 0, nullptr, 0) < 0) {
     spdlog::error("Sendto failed");
-    close(sockfd);
     return {};
   }
 
   uint8_t response[512];
-  socklen_t server_addr_len = sizeof(server_addr);
-  ssize_t resp_size = recvfrom(sockfd, response, sizeof(response), 0,
-                               (sockaddr *)&server_addr, &server_addr_len);
+  socklen_t server_addr_len = sizeof(sockaddr_in);
+  ssize_t resp_size = recvfrom(sockfd, response, sizeof(response), 0, nullptr,
+                               &server_addr_len);
   if (resp_size < 0) {
     spdlog::error("Recvfrom failed or timed out");
-    close(sockfd);
     return {};
   }
-
-  close(sockfd);
 
   std::vector<std::string> ip_addresses;
 
@@ -159,8 +136,7 @@ std::vector<std::string> dns_resolve_hostname_(const std::string &hostname,
   return ip_addresses;
 }
 
-IP_Result dns_resolve_hostname(const std::string &hostname,
-                               const std::string &dns_server) {
-  return {dns_resolve_hostname_(hostname, dns_server, IP_TYPE::IPv4),
-          dns_resolve_hostname_(hostname, dns_server, IP_TYPE::IPv6)};
+IP_Result dns_resolve_hostname(int sockfd, const std::string &hostname) {
+  return {dns_resolve_hostname_(sockfd, hostname, IP_TYPE::IPv4),
+          dns_resolve_hostname_(sockfd, hostname, IP_TYPE::IPv6)};
 }
