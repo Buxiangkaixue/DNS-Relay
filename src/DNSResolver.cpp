@@ -1,161 +1,166 @@
-#include "IP_Result.h"
+#include "IP_TYPE.h"
 
+#include "spdlog/spdlog.h"
 #include <arpa/inet.h>
 #include <cstring>
 #include <iostream>
 #include <netdb.h>
-#include <spdlog/spdlog.h>
 #include <string>
 #include <sys/socket.h>
 #include <unistd.h>
 #include <vector>
 
+class IP_Result {
+public:
+  IP_Result() = default;
+  IP_Result(const std::vector<std::string> &ipv4,
+            const std::vector<std::string> &ipv6)
+      : ipv4_addresses(ipv4), ipv6_addresses(ipv6) {}
 
-// DNS 头部结构
-struct DNSHeader {
-  uint16_t id; // Identification number
-
-  uint8_t rd : 1;     // Recursion Desired
-  uint8_t tc : 1;     // Truncated Message
-  uint8_t aa : 1;     // Authoritative Answer
-  uint8_t opcode : 4; // Purpose of message
-  uint8_t qr : 1;     // Query/Response Flag
-
-  uint8_t rcode : 4; // Response code
-  uint8_t cd : 1;    // Checking Disabled
-  uint8_t ad : 1;    // Authenticated Data
-  uint8_t z : 1;     // Its Z! Reserved
-  uint8_t ra : 1;    // Recursion Available
-
-  uint16_t q_count;    // Number of question entries
-  uint16_t ans_count;  // Number of answer entries
-  uint16_t auth_count; // Number of authority entries
-  uint16_t add_count;  // Number of resource entries
+  std::vector<std::string> ipv4_addresses;
+  std::vector<std::string> ipv6_addresses;
 };
 
-// DNS 质询结构
-struct DNSQuestion {
-  uint16_t qtype;
-  uint16_t qclass;
-};
+// 生成DNS查询包的函数
+std::vector<uint8_t> create_dns_query(const std::string &domain,
+                                      IP_TYPE ip_type) {
+  std::vector<uint8_t> query;
 
-// 将域名转换为DNS查询格式
-void ChangetoDnsNameFormat(unsigned char *dns, const std::string &host) {
-  int lock = 0, i;
-  strcat((char *)host.c_str(), ".");
+  // 1. 标识符（2字节）
+  query.push_back(0x12); // 标识符高字节，可以根据需要随机生成
+  query.push_back(0x34); // 标识符低字节，可以根据需要随机生成
 
-  for (i = 0; i < host.size(); i++) {
-    if (host[i] == '.') {
-      *dns++ = i - lock;
-      for (; lock < i; lock++) {
-        *dns++ = host[lock];
-      }
-      lock++;
-    }
+  // 2. 标志（2字节）
+  query.push_back(0x01); // QR = 0, OpCode = 0, AA = 0, TC = 0, RD = 1
+  query.push_back(0x00); // Z = 0, RCode = 0
+
+  // 3. 问题计数（2字节）
+  query.push_back(0x00); // 问题数（高字节）
+  query.push_back(0x01); // 问题数（低字节）
+
+  // 4. 回答计数（2字节）
+  query.push_back(0x00); // 回答数（高字节）
+  query.push_back(0x00); // 回答数（低字节）
+
+  // 5. 授权计数（2字节）
+  query.push_back(0x00); // 授权数（高字节）
+  query.push_back(0x00); // 授权数（低字节）
+
+  // 6. 附加计数（2字节）
+  query.push_back(0x00); // 附加数（高字节）
+  query.push_back(0x00); // 附加数（低字节）
+
+  // 7. 查询名称（可变长度）
+  size_t pos = 0, next_pos;
+  while ((next_pos = domain.find('.', pos)) != std::string::npos) {
+    query.push_back(static_cast<uint8_t>(next_pos - pos));
+    query.insert(query.end(), domain.begin() + pos, domain.begin() + next_pos);
+    pos = next_pos + 1;
   }
-  *dns++ = '\0';
+  query.push_back(static_cast<uint8_t>(domain.size() - pos));
+  query.insert(query.end(), domain.begin() + pos, domain.end());
+  query.push_back(0x00); // 结束标签
+
+  // 8. 查询类型（2字节）
+  query.push_back(0x00); // 类型高字节
+  if (ip_type == IP_TYPE::IPv4) {
+    query.push_back(0x01);
+  } else if (ip_type == IP_TYPE::IPv6) {
+    query.push_back(0x1c); // 类型低字节（A记录）
+  }
+  // 9. 查询类（2字节）
+  query.push_back(0x00); // 类高字节
+  query.push_back(0x01); // 类低字节（IN）
+
+  return query;
 }
 
-// 解析DNS响应并提取IP地址
-void ParseDNSResponse(unsigned char *buffer, int size, IP_Result &result) {
-  DNSHeader *dns = nullptr;
-  unsigned char *reader = nullptr;
-  dns = (DNSHeader *)buffer;
+std::vector<std::string> dns_resolve_hostname_(const std::string &hostname,
+                                               const std::string &dns_server,
+                                               IP_TYPE query_type) {
+  spdlog::info("Resolving hostname: {} using DNS server: {}", hostname,
+               dns_server);
 
-  reader = &buffer[sizeof(DNSHeader) +
-                   (strlen((const char *)&buffer[sizeof(DNSHeader)]) + 1) +
-                   sizeof(DNSQuestion)];
+  std::vector<uint8_t> query = create_dns_query(hostname, query_type);
 
-  for (int i = 0; i < ntohs(dns->ans_count); i++) {
-    reader = reader + 2;
-    DNSQuestion *question = (DNSQuestion *)reader;
-    reader = reader + sizeof(DNSQuestion);
-
-    if (ntohs(question->qtype) == 1) {
-      struct sockaddr_in a;
-      memcpy(&a.sin_addr.s_addr, reader, sizeof(a.sin_addr.s_addr));
-      result.ipv4.push_back(inet_ntoa(a.sin_addr));
-      reader = reader + 4;
-    } else if (ntohs(question->qtype) == 28) {
-      char ip6[INET6_ADDRSTRLEN];
-      inet_ntop(AF_INET6, reader, ip6, INET6_ADDRSTRLEN);
-      result.ipv6.push_back(ip6);
-      reader = reader + 16;
-    }
+  int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (sockfd < 0) {
+    spdlog::error("Socket creation failed");
+    return {};
   }
+
+  struct timeval tv;
+  tv.tv_sec = 5; // 5 seconds timeout
+  tv.tv_usec = 0;
+  setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
+
+  sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(server_addr));
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_port = htons(53);
+  inet_pton(AF_INET, dns_server.c_str(), &server_addr.sin_addr);
+
+  if (sendto(sockfd, query.data(), query.size(), 0, (sockaddr *)&server_addr,
+             sizeof(server_addr)) < 0) {
+    spdlog::error("Sendto failed");
+    close(sockfd);
+    return {};
+  }
+
+  uint8_t response[512];
+  socklen_t server_addr_len = sizeof(server_addr);
+  ssize_t resp_size = recvfrom(sockfd, response, sizeof(response), 0,
+                               (sockaddr *)&server_addr, &server_addr_len);
+  if (resp_size < 0) {
+    spdlog::error("Recvfrom failed or timed out");
+    close(sockfd);
+    return {};
+  }
+
+  close(sockfd);
+
+  std::vector<std::string> ip_addresses;
+
+  int answer_count = (response[6] << 8) | response[7];
+  size_t pos = 12;
+
+  while (response[pos] != 0) {
+    pos++;
+  }
+  pos += 5;
+
+  for (int i = 0; i < answer_count; ++i) {
+    pos += 2;
+    uint16_t type = (response[pos] << 8) | response[pos + 1];
+    pos += 8;
+    uint16_t data_length = (response[pos] << 8) | response[pos + 1];
+    pos += 2;
+
+    if (type == 1 && data_length == 4) { // A record (IPv4)
+      char ipv4[INET_ADDRSTRLEN];
+      inet_ntop(AF_INET, &response[pos], ipv4, sizeof(ipv4));
+      ip_addresses.push_back(ipv4);
+    } else if (type == 28 && data_length == 16) { // AAAA record (IPv6)
+      char ipv6[INET6_ADDRSTRLEN];
+      inet_ntop(AF_INET6, &response[pos], ipv6, sizeof(ipv6));
+      ip_addresses.push_back(ipv6);
+    }
+    pos += data_length;
+  }
+
+  if (query_type == IP_TYPE::IPv4) {
+    spdlog::info("Resolved {}: {} IPv4 addresses", hostname,
+                 ip_addresses.size());
+  } else if (query_type == IP_TYPE::IPv6) {
+    spdlog::info("Resolved {}: {} IPv6 addresses", hostname,
+                 ip_addresses.size());
+  }
+
+  return ip_addresses;
 }
 
 IP_Result dns_resolve_hostname(const std::string &hostname,
                                const std::string &dns_server) {
-  unsigned char buf[65536], *qname;
-  int s;
-
-  struct sockaddr_in dest;
-  struct DNSHeader *dns = nullptr;
-  struct DNSQuestion *question = nullptr;
-
-  // 创建UDP socket
-  s = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-  if (s < 0) {
-    perror("Socket creation failed");
-    exit(1);
-  }
-
-  dest.sin_family = AF_INET;
-  dest.sin_port = htons(53);
-  dest.sin_addr.s_addr = inet_addr(dns_server.c_str());
-
-  // 设置DNS头部
-  dns = (struct DNSHeader *)&buf;
-  dns->id = (unsigned short)htons(getpid());
-  dns->qr = 0;
-  dns->opcode = 0;
-  dns->aa = 0;
-  dns->tc = 0;
-  dns->rd = 1;
-  dns->ra = 0;
-  dns->z = 0;
-  dns->ad = 0;
-  dns->cd = 0;
-  dns->rcode = 0;
-  dns->q_count = htons(1);
-  dns->ans_count = 0;
-  dns->auth_count = 0;
-  dns->add_count = 0;
-
-  // 设置质询部分
-  qname = &buf[sizeof(struct DNSHeader)];
-  ChangetoDnsNameFormat(qname, hostname);
-  question = (struct DNSQuestion *)&buf[sizeof(struct DNSHeader) +
-                                        (strlen((const char *)qname) + 1)];
-  question->qtype = htons(1);
-  question->qclass = htons(1);
-
-  // 发送DNS查询
-  if (sendto(s, (char *)buf,
-             sizeof(struct DNSHeader) + (strlen((const char *)qname) + 1) +
-                 sizeof(struct DNSQuestion),
-             0, (struct sockaddr *)&dest, sizeof(dest)) < 0) {
-    perror("sendto failed");
-    close(s);
-    exit(1);
-  }
-
-  // 接收DNS响应
-  int i = sizeof(dest);
-  if (recvfrom(s, (char *)buf, 65536, 0, (struct sockaddr *)&dest,
-               (socklen_t *)&i) < 0) {
-    perror("recvfrom failed");
-    close(s);
-    exit(1);
-  }
-
-  // 关闭socket
-  close(s);
-
-  // 解析响应并提取IP地址
-  IP_Result result;
-  ParseDNSResponse(buf, sizeof(buf), result);
-
-  return result;
+  return {dns_resolve_hostname_(hostname, dns_server, IP_TYPE::IPv4),
+          dns_resolve_hostname_(hostname, dns_server, IP_TYPE::IPv6)};
 }

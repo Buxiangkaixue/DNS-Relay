@@ -1,4 +1,5 @@
 #include "DNSQuery.h"
+#include "DNSResolver.h"
 #include "FileDatabase.h"
 #include "LRU_Cache.h"
 #include "utility.h"
@@ -51,6 +52,15 @@ TEST_CASE("test for Database File", "[file database]") {
   REQUIRE(!file_database.get("c.com").has_value());
 }
 
+TEST_CASE("test dns resolver", "[dns_resolver]") {
+  IP_Result ip_result;
+  spdlog::debug("in test dns resolver");
+  for (auto s : {"baidu.com", "bilibili.com", "google.com"}) {
+    ip_result = dns_resolve_hostname(s, "8.8.8.8");
+    fmt::print("{}\n", ip_result);
+  }
+}
+
 TEST_CASE("test dns query", "[dns_query]") {
   LRU_Cache<std::string, IP_Result> cache(3);
   std::string file_path =
@@ -59,11 +69,11 @@ TEST_CASE("test dns query", "[dns_query]") {
   DNSQuery dns_query(cache, file_database, std::string("8.8.8.8"),
                      std::vector<std::string>());
 
-  std::optional<IP_Result> ret;
+  IP_Result ret;
   for (auto s : {"baidu.com", "a.com", "b.com"}) {
     fmt::print("=================================\n{}:\n", s);
     ret = dns_query.dns_query(s);
-    print_dns_query_result(*ret);
+    print_dns_query_result(ret);
   }
 }
 
