@@ -56,10 +56,10 @@ public:
     }
 
     // 通过解析主机名获取结果
-    auto socket_id = socket_pool.get_socket();
+    auto socket_id = socket_pool.getSocket();
     spdlog::info("use socket with id {}", socket_id);
     auto resolvedResult = dns_resolve_hostname(socket_id, domain);
-    socket_pool.release_socket(socket_id);
+    socket_pool.releaseSocket(socket_id);
 
     spdlog::info("In DNSQuery: Domain {} resolved via DNS", domain);
     spdlog::debug("In DNSQuery: Domain {} is put into Cache", domain);

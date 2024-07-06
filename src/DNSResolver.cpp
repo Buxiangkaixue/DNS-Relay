@@ -1,4 +1,5 @@
 #include "IP_TYPE.h"
+#include "IP_Result.h"
 
 #include "spdlog/spdlog.h"
 #include <arpa/inet.h>
@@ -10,16 +11,6 @@
 #include <unistd.h>
 #include <vector>
 
-class IP_Result {
-public:
-  IP_Result() = default;
-  IP_Result(const std::vector<std::string> &ipv4,
-            const std::vector<std::string> &ipv6)
-      : ipv4_addresses(ipv4), ipv6_addresses(ipv6) {}
-
-  std::vector<std::string> ipv4_addresses;
-  std::vector<std::string> ipv6_addresses;
-};
 
 // 生成DNS查询包的函数
 std::vector<uint8_t> create_dns_query(const std::string &domain,

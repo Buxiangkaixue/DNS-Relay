@@ -19,7 +19,7 @@ public:
   ~ThreadPool();
 
 private:
-  // need to keep track of threads so we can join them
+  // need to keep track of threads so that we can join them
   std::vector<std::thread> workers;
   // the task queue
   std::queue<std::function<void()>> tasks;

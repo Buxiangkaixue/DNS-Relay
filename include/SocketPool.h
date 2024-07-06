@@ -1,12 +1,9 @@
-//
-// Created by stellaura on 06/07/24.
-//
-
-#ifndef DNS_RELAY_SOCKETPOOL_H
-#define DNS_RELAY_SOCKETPOOL_H
+#ifndef SOCKETPOOL_H
+#define SOCKETPOOL_H
 
 #include <arpa/inet.h>
 #include <condition_variable>
+#include <iostream>
 #include <mutex>
 #include <queue>
 #include <string>
@@ -18,13 +15,17 @@ public:
   SocketPool(const std::string &dns_server, int pool_size);
   ~SocketPool();
 
-  int get_socket();
-  void release_socket(int sockfd);
+  int getSocket();
+  void releaseSocket(int sock);
 
 private:
+  int createSocket();
+
+  std::string dns_server_;
+  int pool_size_;
   std::queue<int> sockets_;
   std::mutex mutex_;
   std::condition_variable cond_var_;
 };
 
-#endif // DNS_RELAY_SOCKETPOOL_H
+#endif // SOCKETPOOL_H

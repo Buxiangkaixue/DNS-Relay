@@ -1,29 +1,12 @@
 #include "SocketPool.h"
-#include <cstring>
-#include <iostream>
+#include "string.h"
 
-SocketPool::SocketPool(const std::string &dns_server, int pool_size) {
-  for (int i = 0; i < pool_size; ++i) {
-    int sockfd = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
-    if (sockfd < 0) {
-      perror("Socket creation failed");
-      continue;
-    }
-
-    struct timeval tv;
-    tv.tv_sec = 5; // 5 seconds timeout
-    tv.tv_usec = 0;
-    setsockopt(sockfd, SOL_SOCKET, SO_RCVTIMEO, &tv, sizeof(tv));
-
-    sockaddr_in server_addr;
-    memset(&server_addr, 0, sizeof(server_addr));
-    server_addr.sin_family = AF_INET;
-    server_addr.sin_port = htons(53);
-    inet_pton(AF_INET, dns_server.c_str(), &server_addr.sin_addr);
-
-    {
-      std::lock_guard<std::mutex> lock(mutex_);
-      sockets_.push(sockfd);
+SocketPool::SocketPool(const std::string &dns_server, int pool_size)
+    : dns_server_(dns_server), pool_size_(pool_size) {
+  for (int i = 0; i < pool_size_; ++i) {
+    int sock = createSocket();
+    if (sock != -1) {
+      sockets_.push(sock);
     }
   }
 }
@@ -31,21 +14,50 @@ SocketPool::SocketPool(const std::string &dns_server, int pool_size) {
 SocketPool::~SocketPool() {
   std::lock_guard<std::mutex> lock(mutex_);
   while (!sockets_.empty()) {
-    close(sockets_.front());
+    int sock = sockets_.front();
     sockets_.pop();
+    close(sock);
   }
 }
 
-int SocketPool::get_socket() {
+int SocketPool::getSocket() {
   std::unique_lock<std::mutex> lock(mutex_);
-  cond_var_.wait(lock, [this] { return !sockets_.empty(); });
-  int sockfd = sockets_.front();
+  while (sockets_.empty()) {
+    cond_var_.wait(lock);
+  }
+  int sock = sockets_.front();
   sockets_.pop();
-  return sockfd;
+  return sock;
 }
 
-void SocketPool::release_socket(int sockfd) {
+void SocketPool::releaseSocket(int sock) {
   std::lock_guard<std::mutex> lock(mutex_);
-  sockets_.push(sockfd);
+  sockets_.push(sock);
   cond_var_.notify_one();
+}
+
+int SocketPool::createSocket() {
+  int sock = socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP);
+  if (sock == -1) {
+    std::cerr << "Failed to create socket" << std::endl;
+    return -1;
+  }
+
+  struct sockaddr_in server_addr;
+  memset(&server_addr, 0, sizeof(server_addr));
+  server_addr.sin_family = AF_INET;
+  server_addr.sin_port = htons(53); // DNS typically uses port 53
+  if (inet_pton(AF_INET, dns_server_.c_str(), &server_addr.sin_addr) <= 0) {
+    std::cerr << "Invalid DNS server address" << std::endl;
+    close(sock);
+    return -1;
+  }
+
+  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+    std::cerr << "Connection to DNS server failed" << std::endl;
+    close(sock);
+    return -1;
+  }
+
+  return sock;
 }
