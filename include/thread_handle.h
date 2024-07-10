@@ -25,24 +25,27 @@ void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
   DNSQuery dns_query(
       cache, file_database, socket_pool,
       std::vector<std::string>{"test0", "baidu.com", "bilibili.com"});
-  std::string domain_name = extract_domain_name(
-      (const char *)request.data(), request.size()); // 正确的调用方式
+  std::string domain_name =
+      extract_domain_name(reinterpret_cast<const char *>(request.data()),
+                          request.size()); // 正确的调用方式
   spdlog::info("domain name: {}", domain_name);
 
   // 提取查询类型
-  uint16_t qtype = ntohs(*(uint16_t *)(request.data() + request.size() - 4));
+  uint16_t qtype =
+      ntohs(*reinterpret_cast<uint16_t *>(request.data() + request.size() - 4));
   spdlog::info("query type: {}", qtype);
 
   auto ip_result = dns_query.dns_query(domain_name);
 
   print_dns_query_result(ip_result);
   // 构建 DNS 响应包
-  std::vector<uint8_t> response = build_dns_response(
-      (const char *)request.data(), request.size(), ip_result);
+  std::vector<uint8_t> response =
+      build_dns_response(reinterpret_cast<const char *>(request.data()),
+                         request.size(), ip_result);
 
   // 发送 DNS 响应包
   sendto(sockfd, response.data(), response.size(), 0,
-         (struct sockaddr *)&client_addr, addr_len);
+         reinterpret_cast<struct sockaddr *>(&client_addr), addr_len);
 }
 
 template <typename Cache>
@@ -55,8 +58,9 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
     std::vector<uint8_t> buffer(BUFFER_SIZE);
 
     // 接收 DNS 查询
-    ssize_t n = recvfrom(sockfd, buffer.data(), BUFFER_SIZE, 0,
-                         (struct sockaddr *)&client_addr, &addr_len);
+    ssize_t n =
+        recvfrom(sockfd, buffer.data(), BUFFER_SIZE, 0,
+                 reinterpret_cast<struct sockaddr *>(&client_addr), &addr_len);
     if (n < 0) {
       perror("Receive failed");
       continue;
@@ -70,7 +74,7 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
                  ntohs(client_addr.sin_port));
 
     spdlog::debug("Received DNS query:");
-    print_hex((const char *)buffer.data(), n);
+    print_hex(reinterpret_cast<const char *>(buffer.data()), n);
 
     // 使用线程池处理每个查询
     thread_pool.enqueue(handle_request<Cache>, sockfd, client_addr, addr_len,

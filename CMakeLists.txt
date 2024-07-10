@@ -55,3 +55,17 @@ add_executable(${ProjectName}_stress_test ${CMAKE_SOURCE_DIR}/test/stress_test.c
 set_target_properties(${ProjectName} PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 set_target_properties(${ProjectName}_test PROPERTIES RUNTIME_OUTPUT_DIRECTORY ${EXECUTABLE_OUTPUT_PATH})
 set_target_properties(${ProjectName}_lib PROPERTIES LIBRARY_OUTPUT_DIRECTORY ${LIBRARY_OUTPUT_PATH})
+
+# 设计详细的警告 将错误提到编译期
+target_compile_options(${ProjectName} PRIVATE
+        -Wall
+        -Wextra
+        -Wconversion
+        -Wsign-compare
+        -Wzero-as-null-pointer-constant
+        -Wmissing-declarations
+        -Wold-style-cast
+        -Wnon-virtual-dtor
+        -Werror
+        )
+

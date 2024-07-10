@@ -6,9 +6,9 @@
 
 template <typename Key, typename Value, size_t NUM_K> class LRU_K_Cache {
 private:
+  size_t capacity_;
   LRU_Cache<Key, std::pair<Value, size_t>> tempCache_; // 包含访问计数
   LRU_Cache<Key, Value> permanentCache_;               // 持久缓存
-  size_t capacity_;
   mutable std::shared_mutex mutex_;
 
   // 这里肯定是可以万能引用优化的 但是 由于 std::pair<Value, size_t>

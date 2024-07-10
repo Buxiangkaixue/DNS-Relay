@@ -70,9 +70,8 @@ public:
 private:
   Cache &cache;
   FileDatabase &database;
-  std::set<std::string> blocked_domains;
-  std::string dns_sever;
   SocketPool &socket_pool;
+  std::set<std::string> blocked_domains;
 };
 
 #endif // DNS_RELAY_DNSQUERY_H

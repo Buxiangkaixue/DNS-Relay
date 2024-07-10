@@ -18,6 +18,12 @@
 
 constexpr int PORT = 53;
 
+int initialize_udp_socket();
+
+void handle_command_line_arguments(int argc, char *argv[],
+                                   std::string &log_level, int &thread_count,
+                                   std::string &dns_server);
+
 int initialize_udp_socket() {
   int udp_sockfd;
   struct sockaddr_in server_addr;
@@ -35,7 +41,7 @@ int initialize_udp_socket() {
   server_addr.sin_port = htons(PORT);
 
   // 绑定 UDP socket 到地址和端口
-  if (bind(udp_sockfd, (const struct sockaddr *)&server_addr,
+  if (bind(udp_sockfd, reinterpret_cast<const sockaddr *>(&server_addr),
            sizeof(server_addr)) < 0) {
     perror("UDP bind failed");
     close(udp_sockfd);
