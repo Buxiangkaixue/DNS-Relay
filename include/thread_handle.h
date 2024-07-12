@@ -52,20 +52,21 @@ template <typename Cache>
 void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
                 SocketPool &socket_pool, ThreadPool &thread_pool) {
   while (true) {
-    struct sockaddr_in client_addr;
+    sockaddr_in client_addr{};
     socklen_t addr_len = sizeof(client_addr);
     std::vector<uint8_t> buffer(BUFFER_SIZE);
 
     // 接收 DNS 查询
-    ssize_t n =
+    auto n =
         recvfrom(sockfd, buffer.data(), BUFFER_SIZE, 0,
                  reinterpret_cast<struct sockaddr *>(&client_addr), &addr_len);
-    if (n < 0) {
+    if (n < 0) [[unlikely]] {
       perror("Receive failed");
       continue;
     }
 
-    buffer.resize(n); // 调整 buffer 大小到实际接收的数据长度
+    buffer.resize(
+        static_cast<unsigned long>(n)); // 调整 buffer 大小到实际接收的数据长度
 
     char client_ip[INET_ADDRSTRLEN];
     inet_ntop(AF_INET, &(client_addr.sin_addr), client_ip, INET_ADDRSTRLEN);
@@ -73,7 +74,8 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
                  ntohs(client_addr.sin_port));
 
     spdlog::debug("Received DNS query:");
-    print_hex(reinterpret_cast<const char *>(buffer.data()), n);
+    print_hex(reinterpret_cast<const char *>(buffer.data()),
+              static_cast<size_t>(n));
 
     // 使用线程池处理每个查询
     thread_pool.enqueue(handle_request<Cache>, sockfd, client_addr, addr_len,

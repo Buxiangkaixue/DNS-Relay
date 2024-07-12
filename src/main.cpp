@@ -9,19 +9,15 @@
 #include <arpa/inet.h>
 #include <cstring>
 #include <filesystem>
-#include <fmt/format.h>
 #include <iostream>
-#include <map>
 #include <spdlog/spdlog.h>
-#include <thread>
 #include <unistd.h>
-#include <vector>
 
 constexpr int PORT = 53;
 
 int initialize_udp_socket() {
   int udp_sockfd;
-  struct sockaddr_in server_addr;
+  sockaddr_in server_addr;
 
   // 创建 UDP socket
   if ((udp_sockfd = socket(AF_INET, SOCK_DGRAM, 0)) < 0) {
@@ -104,7 +100,7 @@ int main(int argc, char *argv[]) {
   FileDatabase file_database(file_path.string());
 
   // 创建线程池
-  ThreadPool thread_pool(thread_count); // 例如4个线程
+  ThreadPool thread_pool(static_cast<size_t>(thread_count)); // 例如4个线程
   SocketPool socket_pool(dns_sever, thread_count);
 
   // 启动 UDP 处理
