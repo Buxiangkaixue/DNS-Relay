@@ -8,6 +8,7 @@
 
 #include <arpa/inet.h>
 #include <cstring>
+#include <filesystem>
 #include <fmt/format.h>
 #include <iostream>
 #include <map>
@@ -17,12 +18,6 @@
 #include <vector>
 
 constexpr int PORT = 53;
-
-int initialize_udp_socket();
-
-void handle_command_line_arguments(int argc, char *argv[],
-                                   std::string &log_level, int &thread_count,
-                                   std::string &dns_server);
 
 int initialize_udp_socket() {
   int udp_sockfd;
@@ -79,6 +74,13 @@ void handle_command_line_arguments(int argc, char *argv[],
   }
 }
 
+std::filesystem::path getExecutableDir() {
+  // 获取当前可执行文件的路径
+  std::filesystem::path exePath =
+      std::filesystem::read_symlink("/proc/self/exe");
+  return exePath.parent_path();
+}
+
 int main(int argc, char *argv[]) {
   // 处理命令行参数
   std::string log_level = "info"; // 默认日志等级为info
@@ -94,9 +96,12 @@ int main(int argc, char *argv[]) {
   int udp_sockfd = initialize_udp_socket();
 
   // 初始化程序查询
-  const std::string file_path = "../data/dnsrelay.txt";
+  std::filesystem::path file_path = getExecutableDir();
+  file_path = file_path.parent_path().parent_path();
+  spdlog::debug("project root path: {}", file_path.string());
+  file_path = file_path / "data" / "dnsrelay.txt";
   LRU_K_Cache<std::string, IP_Result, 2> cache(10);
-  FileDatabase file_database(file_path);
+  FileDatabase file_database(file_path.string());
 
   // 创建线程池
   ThreadPool thread_pool(thread_count); // 例如4个线程

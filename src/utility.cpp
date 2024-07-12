@@ -24,8 +24,8 @@ void print_dns_query_result(const IP_Result &ip_ret) {
   }
 }
 
-#include <spdlog/spdlog.h>
 #include <iomanip>
+#include <spdlog/spdlog.h>
 #include <sstream>
 #include <string>
 
@@ -33,7 +33,8 @@ void print_hex(const char *data, size_t len) {
   std::ostringstream oss;
   std::string hex_output;
   for (size_t i = 0; i < len; ++i) {
-    oss << std::hex << std::setw(2) << std::setfill('0') << (static_cast<unsigned int>(data[i]) & 0xff) << " ";
+    oss << std::hex << std::setw(2) << std::setfill('0')
+        << (static_cast<unsigned int>(data[i]) & 0xff) << " ";
     if ((i + 1) % 16 == 0 || i + 1 == len) {
       hex_output += oss.str() + "\n";
       oss.str("");
@@ -43,8 +44,7 @@ void print_hex(const char *data, size_t len) {
   spdlog::debug("Hex output:\n{}", hex_output);
 }
 
-
-std::string extract_domain_name(const char *buffer, ssize_t len) {
+std::string extract_domain_name(const char *buffer) {
   std::string domain_name;
   const char *query = buffer + 12; // Skip the DNS header (12 bytes)
 
@@ -71,10 +71,10 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
   std::vector<uint8_t> response(
       query, query + query_len); // Start with the original query
 
-  if(ip_result.ipv4.empty() && ip_result.ipv6.empty()) {
+  if (ip_result.ipv4.empty() && ip_result.ipv6.empty()) {
     spdlog::debug("Empty IP result, returning NXDOMAIN");
-    response[2] = 0x81; // QR = 1, Opcode = 0, AA = 0, TC = 0, RD = 1
-    response[3] = 0x83; // RA = 1, Z = 0, RCODE = 3 (NXDOMAIN)
+    response[2] = 0x81;         // QR = 1, Opcode = 0, AA = 0, TC = 0, RD = 1
+    response[3] = 0x83;         // RA = 1, Z = 0, RCODE = 3 (NXDOMAIN)
     response.resize(query_len); // Remove any additional data
     return response;
   }
@@ -82,7 +82,8 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
   response[2] = 0x81; // Set the response flags
   response[3] = 0x80; // Set the response flags
 
-  uint16_t qtype = (query[query_len - 4] << 8) | query[query_len - 3];
+  uint16_t qtype =
+      static_cast<uint16_t>(query[query_len - 4] << 8) | query[query_len - 3];
 
   // 处理被屏蔽的ip的情况
   std::vector<std::string> ips;
@@ -99,12 +100,9 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
   }
 
   // Calculate the number of answers
-  uint16_t answer_count = ips.size();
-  response[6] = (answer_count >> 8) & 0xFF;
-  response[7] = answer_count & 0xFF;
-
-  // Move the response pointer to the end of the query section
-  size_t pos = query_len;
+  uint16_t answer_count = static_cast<uint16_t>(ips.size());
+  response[6] = static_cast<unsigned char>((answer_count >> 8) & 0xFF);
+  response[7] = static_cast<unsigned char>(answer_count & 0xFF);
 
   for (const auto &ip : ips) {
     response.push_back(0xc0); // Name: pointer to offset 12 (start of the query)
@@ -132,14 +130,16 @@ std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
 
       in_addr addr;
       inet_pton(AF_INET, ip.c_str(), &addr);
-      response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 4);
+      response.insert(response.end(), reinterpret_cast<uint8_t *>(&addr),
+                      reinterpret_cast<uint8_t *>(&addr) + 4);
     } else if (qtype == 28) {   // AAAA record
       response.push_back(0x00); // Data length: 16 bytes for an IPv6 address
       response.push_back(0x10);
 
       in6_addr addr;
       inet_pton(AF_INET6, ip.c_str(), &addr);
-      response.insert(response.end(), (uint8_t *)&addr, (uint8_t *)&addr + 16);
+      response.insert(response.end(), reinterpret_cast<uint8_t *>(&addr),
+                      reinterpret_cast<uint8_t *>(&addr) + 16);
     }
   }
 

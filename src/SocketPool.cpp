@@ -53,7 +53,8 @@ int SocketPool::createSocket() {
     return -1;
   }
 
-  if (connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr)) < 0) {
+  if (connect(sock, reinterpret_cast<sockaddr *>(&server_addr),
+              sizeof(server_addr)) < 0) {
     std::cerr << "Connection to DNS server failed" << std::endl;
     close(sock);
     return -1;

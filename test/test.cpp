@@ -33,7 +33,7 @@ TEST_CASE("test for LRU Cache", "[test]") {
   REQUIRE("d" == cache.get(3));
   try {
     cache.get(1);
-  } catch (std::runtime_error e) {
+  } catch (const std::runtime_error &e) {
     REQUIRE(std::string("Key not found") == e.what());
     fmt::print("{}\n", e.what());
   }
@@ -51,6 +51,9 @@ TEST_CASE("test for Database File", "[file database]") {
           std::vector<std::string>{"0.0.0.0"});
   REQUIRE(!file_database.get("c.com").has_value());
 }
+
+TEST_CASE("test IP_Result format") { fmt::print("{}", IP_Result()); }
+
 //
 // TEST_CASE("test dns resolver", "[dns_resolver]") {
 //  IP_Result ip_result;
@@ -76,5 +79,3 @@ TEST_CASE("test for Database File", "[file database]") {
 //    print_dns_query_result(ret);
 //  }
 //}
-
-TEST_CASE("test IP_Result format") { fmt::print("{}", IP_Result()); }

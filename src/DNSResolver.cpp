@@ -127,6 +127,8 @@ std::vector<std::string> dns_resolve_hostname_(int sockfd,
   return ip_addresses;
 }
 
+
+
 IP_Result dns_resolve_hostname(int sockfd, const std::string &hostname) {
   return {dns_resolve_hostname_(sockfd, hostname, IP_TYPE::IPv4),
           dns_resolve_hostname_(sockfd, hostname, IP_TYPE::IPv6)};

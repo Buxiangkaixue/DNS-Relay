@@ -25,9 +25,8 @@ void handle_request(int sockfd, sockaddr_in client_addr, socklen_t addr_len,
   DNSQuery dns_query(
       cache, file_database, socket_pool,
       std::vector<std::string>{"test0", "baidu.com", "bilibili.com"});
-  std::string domain_name =
-      extract_domain_name(reinterpret_cast<const char *>(request.data()),
-                          request.size()); // 正确的调用方式
+  std::string domain_name = extract_domain_name(
+      reinterpret_cast<const char *>(request.data())); // 正确的调用方式
   spdlog::info("domain name: {}", domain_name);
 
   // 提取查询类型
