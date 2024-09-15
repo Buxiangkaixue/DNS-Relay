@@ -1,12 +1,11 @@
-#ifndef DNS_RELAY_THREAD_HANDLE_H
-#define DNS_RELAY_THREAD_HANDLE_H
+#pragma once
 
 #include "CacheConcept.h"
-#include "DNSQuery.h"
+#include "DNSQuery.hpp"
 #include "FileDatabase.h"
 #include "IP_Result.h"
 #include "SocketPool.h"
-#include "ThreadPool.h"
+#include "ThreadPool.hpp"
 #include "utility.h"
 
 #include <arpa/inet.h>
@@ -83,5 +82,3 @@ void handle_udp(int sockfd, Cache &cache, FileDatabase &file_database,
                         std::ref(file_database), std::ref(socket_pool));
   }
 }
-
-#endif // DNS_RELAY_THREAD_HANDLE_H

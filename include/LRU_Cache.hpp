@@ -1,5 +1,4 @@
-#ifndef DNS_RELAY_LRU_CACHE_H
-#define DNS_RELAY_LRU_CACHE_H
+#pragma once
 
 #include <list>
 #include <mutex>
@@ -43,6 +42,7 @@ public:
     spdlog::info("LRU_Cache created with capacity {}", capacity_);
   }
 
+  // TODO 可以使用c++23的 decucing this 改进，但是至少需要 gcc 14
   Value get(const Key &key) {
     std::unique_lock lock(mutex_);
     return get_ref(key);
@@ -116,5 +116,3 @@ public:
     }
   }
 };
-
-#endif // DNS_RELAY_LRU_CACHE_H

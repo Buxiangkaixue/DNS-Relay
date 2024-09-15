@@ -1,7 +1,7 @@
-#include "DNSQuery.h"
+#include "DNSQuery.hpp"
 #include "DNSResolver.h"
 #include "FileDatabase.h"
-#include "LRU_Cache.h"
+#include "LRU_Cache.hpp"
 #include "utility.h"
 
 #include <catch2/catch_all.hpp>

@@ -1,5 +1,4 @@
-#ifndef DNS_RELAY_IP_RESULT_H
-#define DNS_RELAY_IP_RESULT_H
+#pragma once
 
 #include <fmt/format.h>
 #include <fmt/ranges.h>
@@ -41,5 +40,3 @@ template <> struct fmt::formatter<IP_Result> {
                           fmt::join(result.ipv6, ", "));
   }
 };
-
-#endif // DNS_RELAY_IP_RESULT_H

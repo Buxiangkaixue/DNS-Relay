@@ -1,5 +1,4 @@
-#ifndef DNS_RELAY_THREADPOOL_H
-#define DNS_RELAY_THREADPOOL_H
+#pragma once
 
 #include <condition_variable>
 #include <functional>
@@ -85,5 +84,3 @@ inline ThreadPool::~ThreadPool() {
   for (std::thread &worker : workers)
     worker.join();
 }
-
-#endif // DNS_RELAY_THREADPOOL_H

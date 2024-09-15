@@ -91,7 +91,7 @@ target_link_libraries(${project_name}_test PRIVATE spdlog::spdlog)
 
 # 手动编译test里面的一些其他组件
 # stress test
-# add_executable(${project_name}_stress_test ${CMAKE_SOURCE_DIR}/test/stress_test.cpp)
+add_executable(${project_name}_stress_test ${CMAKE_SOURCE_DIR}/test/stress_test.cpp)
 
 
 # 进行Cmake测试

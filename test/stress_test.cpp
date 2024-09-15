@@ -69,8 +69,10 @@ std::vector<uint8_t> create_dns_query(const std::string &domain) {
 void send_dns_request(int thread_id, int num_requests, int &success_count,
                       int &failure_count,
                       const std::vector<std::vector<uint8_t>> &requests) {
+  (void)thread_id;
+
   int sockfd;
-  struct sockaddr_in server_addr;
+  sockaddr_in server_addr;
   char buffer[BUFFER_SIZE];
 
   // 创建 UDP socket
@@ -86,7 +88,7 @@ void send_dns_request(int thread_id, int num_requests, int &success_count,
   server_addr.sin_port = htons(PORT);
 
   // 随机数生成
-  std::srand(std::time(nullptr));
+  std::srand(static_cast<unsigned int>(std::time(nullptr)));
 
   for (int i = 0; i < num_requests; ++i) {
     // 从请求列表中随机选择一个请求
@@ -94,9 +96,9 @@ void send_dns_request(int thread_id, int num_requests, int &success_count,
         requests[std::rand() % requests.size()];
 
     // 发送 DNS 查询
-    ssize_t n =
-        sendto(sockfd, request.data(), request.size(), 0,
-               (const struct sockaddr *)&server_addr, sizeof(server_addr));
+    ssize_t n = sendto(sockfd, request.data(), request.size(), 0,
+                       reinterpret_cast<const sockaddr *>(&server_addr),
+                       sizeof(server_addr));
     if (n < 0) {
       perror("Send failed");
       ++failure_count;
@@ -106,7 +108,7 @@ void send_dns_request(int thread_id, int num_requests, int &success_count,
     // 接收 DNS 响应
     socklen_t len = sizeof(server_addr);
     n = recvfrom(sockfd, buffer, BUFFER_SIZE, 0,
-                 (struct sockaddr *)&server_addr, &len);
+                 reinterpret_cast<sockaddr *>(&server_addr), &len);
     if (n < 0) {
       perror("Receive failed");
       ++failure_count;

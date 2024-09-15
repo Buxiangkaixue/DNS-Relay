@@ -1,9 +1,4 @@
-//
-// Created by stellaura on 02/07/24.
-//
-
-#ifndef DNS_RELAY_UTILITY_H
-#define DNS_RELAY_UTILITY_H
+#pragma once
 
 #include "IP_Result.h"
 
@@ -18,5 +13,3 @@ std::string extract_domain_name(const char *buffer);
 
 std::vector<uint8_t> build_dns_response(const char *query, ssize_t query_len,
                                         const IP_Result &ip_result);
-
-#endif // DNS_RELAY_UTILITY_H

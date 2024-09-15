@@ -1,8 +1,7 @@
-#ifndef FILEDATABASE_H
-#define FILEDATABASE_H
+#pragma once
 
-#include <mutex>
 #include "IP_Result.h"
+#include <mutex>
 #include <optional>
 #include <string>
 #include <unordered_map>
@@ -19,5 +18,3 @@ private:
   std::unordered_map<std::string, IP_Result> database;
   mutable std::mutex mtx; // 互斥锁，mutable 允许在 const 成员函数中锁定和解锁
 };
-
-#endif // FILEDATABASE_H

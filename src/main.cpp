@@ -1,9 +1,9 @@
-#include "DNSQuery.h"
+#include "DNSQuery.hpp"
 #include "FileDatabase.h"
-#include "LRU_K_Cache.h"
+#include "LRU_K_Cache.hpp"
 #include "log_initialization.h"
 #include "show_help.h"
-#include "thread_handle.h"
+#include "thread_handle.hpp"
 #include "utility.h"
 
 #include <arpa/inet.h>

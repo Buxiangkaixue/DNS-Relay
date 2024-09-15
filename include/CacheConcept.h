@@ -1,9 +1,4 @@
-//
-// Created by stellaura on 03/07/24.
-//
-
-#ifndef DNS_RELAY_CACHECONCEPT_H
-#define DNS_RELAY_CACHECONCEPT_H
+#pragma once
 
 #include <concepts>
 
@@ -13,5 +8,3 @@ concept CacheConcept =
       { cache.get(key) } -> std::convertible_to<Value>;
       { cache.put(key, value) };
     };
-
-#endif // DNS_RELAY_CACHECONCEPT_H

@@ -1,5 +1,4 @@
-#ifndef DNS_RELAY_DNSQUERY_H
-#define DNS_RELAY_DNSQUERY_H
+#pragma once
 
 #include "CacheConcept.h"
 #include "DNSResolver.h"
@@ -73,5 +72,3 @@ private:
   SocketPool &socket_pool;
   std::set<std::string> blocked_domains;
 };
-
-#endif // DNS_RELAY_DNSQUERY_H

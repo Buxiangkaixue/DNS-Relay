@@ -1,7 +1,6 @@
-#ifndef DNS_RELAY_LRU_K_CACHE_H
-#define DNS_RELAY_LRU_K_CACHE_H
+#pragma once
 
-#include "LRU_Cache.h"
+#include "LRU_Cache.hpp"
 #include <stdexcept>
 
 template <typename Key, typename Value, size_t NUM_K> class LRU_K_Cache {
@@ -106,5 +105,3 @@ public:
     }
   }
 };
-
-#endif // DNS_RELAY_LRU_K_CACHE_H

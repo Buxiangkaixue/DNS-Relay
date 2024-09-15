@@ -1,5 +1,4 @@
-#ifndef SOCKETPOOL_H
-#define SOCKETPOOL_H
+#pragma once
 
 #include <arpa/inet.h>
 #include <condition_variable>
@@ -27,5 +26,3 @@ private:
   std::mutex mutex_;
   std::condition_variable cond_var_;
 };
-
-#endif // SOCKETPOOL_H
